@@ -37,3 +37,38 @@ CREATE TABLE Ticket (
     RemainedCapacity INT CHECK (RemainedCapacity >= 0),
     Facilities JSONB
 );
+
+CREATE TABLE Reservation (
+    ReservationID SERIAL PRIMARY KEY,
+    TicketID INT REFERENCES Ticket(TicketID) ON DELETE CASCADE,
+    ReservationPhoneNum VARCHAR(11) REFERENCES Users(PhoneNumber) ON DELETE CASCADE,
+    CancellationPhoneNum VARCHAR(11) REFERENCES Users(PhoneNumber) ON DELETE SET NULL,
+    ReservationDateTime TIMESTAMP NOT NULL,
+    ReservationExpireDatetime TIMESTAMP,
+    ReservationStatus VARCHAR(20) CHECK (ReservationStatus IN ('Reserved', 'Paid', 'Cancelled')),
+    CONSTRAINT chk_expire_date CHECK (ReservationExpireDatetime >= ReservationDateTime)
+);
+
+CREATE TABLE Payment (
+    PaymentID SERIAL PRIMARY KEY,
+    ReservationID INT REFERENCES Reservation(ReservationID) ON DELETE SET NULL,
+    PaymentAmount DECIMAL(11, 3) CHECK (PaymentAmount >= 0),
+    PaymentMethod VARCHAR(50),
+    PaymentDatetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PaymentStatus VARCHAR(20) CHECK (PaymentStatus IN ('Success', 'Failed', 'Pending')) DEFAULT 'Pending'
+);
+
+CREATE TABLE Report (
+    ReportID SERIAL PRIMARY KEY,
+    ReservationID INT REFERENCES Reservation(ReservationID) ON DELETE CASCADE,
+    SubmitterPhoneNumber VARCHAR(11) REFERENCES Users(PhoneNumber) ON DELETE CASCADE,
+    ReportCategory VARCHAR(100),
+    ReportDescription TEXT,
+    ReportStatus VARCHAR(20) CHECK (ReportStatus IN ('Pending', 'Reviewed'))
+);
+
+CREATE TABLE ReportRev (
+    ReportID INT REFERENCES Report(ReportID) ON DELETE CASCADE,
+    ReviewerPhoneNum VARCHAR(11) REFERENCES Users(PhoneNumber) ON DELETE CASCADE,
+    PRIMARY KEY (ReportID, ReviewerPhoneNum)
+);

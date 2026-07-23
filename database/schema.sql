@@ -16,7 +16,7 @@ CREATE TABLE Venue (
     Capacity INT CHECK (Capacity > 0)
 );
 
-CREATE TABLE Match (
+CREATE TABLE Matches (
     MatchID SERIAL PRIMARY KEY,
     VenueID INT REFERENCES Venue(VenueID) ON DELETE CASCADE,
     SportType VARCHAR(50) CHECK (SportType IN ('Football', 'Volleyball', 'Basketball')),
@@ -28,7 +28,7 @@ CREATE TABLE Match (
 
 CREATE TABLE Ticket (
     TicketID SERIAL PRIMARY KEY,
-    MatchID INT REFERENCES Match(MatchID) ON DELETE CASCADE,
+    MatchID INT REFERENCES Matches(MatchID) ON DELETE CASCADE,
     SeatNumber VARCHAR(10),
     SeatRow VARCHAR(10),
     SeatSection VARCHAR(50),
@@ -61,7 +61,7 @@ CREATE TABLE Payment (
 CREATE TABLE Report (
     ReportID SERIAL PRIMARY KEY,
     ReservationID INT REFERENCES Reservation(ReservationID) ON DELETE CASCADE,
-    SubmitterPhoneNumber VARCHAR(11) REFERENCES Users(PhoneNumber) ON DELETE CASCADE,
+    SubmitterPhoneNum VARCHAR(11) REFERENCES Users(PhoneNumber) ON DELETE CASCADE,
     ReportCategory VARCHAR(100),
     ReportDescription TEXT,
     ReportStatus VARCHAR(20) CHECK (ReportStatus IN ('Pending', 'Reviewed'))
@@ -72,3 +72,14 @@ CREATE TABLE ReportRev (
     ReviewerPhoneNum VARCHAR(11) REFERENCES Users(PhoneNumber) ON DELETE CASCADE,
     PRIMARY KEY (ReportID, ReviewerPhoneNum)
 );
+
+CREATE INDEX idx_match_sport ON MATCHES(SportType);
+CREATE INDEX idx_match_datetime ON Matches(MatchDatetime);
+CREATE INDEX idx_users_city ON Users(ResidenceCity);
+CREATE INDEX idx_ticket_class ON Ticket(TicketClass);
+
+CREATE INDEX idx_reservation_user ON Reservation(ReservationPhoneNum);
+CREATE INDEX idx_ticket_match ON Ticket(MatchID);
+CREATE INDEX idx_matches_venue ON Matches(VenueID);
+CREATE INDEX idx_report_user ON Report(SubmitterPhoneNum);
+CREATE INDEX idx_report_reservation ON Report(ReservationID);

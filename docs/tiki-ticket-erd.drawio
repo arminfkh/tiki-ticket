@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36">
   <diagram name="Page-1" id="tDEJ0fLe7vyB38gW2NDg">
-    <mxGraphModel dx="3699" dy="1238" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1782" dy="300" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -146,12 +146,12 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="5YTaWoY79ZHOeUSu94uE-92" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;aspect=fixed;flipH=0;legacyAnchorPoints=0;" value="&lt;u&gt;VenueID&lt;/u&gt;" vertex="1">
-          <mxGeometry height="50" width="100" x="-210" y="985" as="geometry" />
+          <mxGeometry height="50" width="100" x="-210" y="960" as="geometry" />
         </mxCell>
         <mxCell id="5YTaWoY79ZHOeUSu94uE-94" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;aspect=fixed;flipH=0;legacyAnchorPoints=0;" value="Capacity" vertex="1">
-          <mxGeometry height="50" width="100" x="-210" y="1085" as="geometry" />
+          <mxGeometry height="50" width="100" x="-210" y="1110" as="geometry" />
         </mxCell>
-        <mxCell id="5YTaWoY79ZHOeUSu94uE-96" edge="1" parent="1" source="5YTaWoY79ZHOeUSu94uE-106" style="endArrow=none;html=1;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" target="szBLI0tV1fWDXcGH8WDX-11" value="">
+        <mxCell id="5YTaWoY79ZHOeUSu94uE-96" edge="1" parent="1" source="5YTaWoY79ZHOeUSu94uE-106" style="endArrow=none;html=1;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0;exitY=0.25;exitDx=0;exitDy=0;" target="szBLI0tV1fWDXcGH8WDX-11" value="">
           <mxGeometry height="50" relative="1" width="50" as="geometry">
             <mxPoint x="390" y="1065" as="sourcePoint" />
             <mxPoint x="-100.00000000000045" y="1062.5" as="targetPoint" />
@@ -581,7 +581,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="szBLI0tV1fWDXcGH8WDX-11" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;aspect=fixed;flipH=0;legacyAnchorPoints=0;" value="VenueName" vertex="1">
-          <mxGeometry height="50" width="100" x="-210" y="1035" as="geometry" />
+          <mxGeometry height="50" width="100" x="-210" y="1010" as="geometry" />
         </mxCell>
         <mxCell id="szBLI0tV1fWDXcGH8WDX-14" parent="1" style="shape=rhombus;perimeter=rhombusPerimeter;whiteSpace=wrap;html=1;align=center;strokeWidth=2;" value="Cancels" vertex="1">
           <mxGeometry height="60" width="120" x="270" y="318" as="geometry" />
@@ -603,6 +603,15 @@
         </mxCell>
         <mxCell id="szBLI0tV1fWDXcGH8WDX-19" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="1" vertex="1">
           <mxGeometry height="30" width="20" x="110" y="325" as="geometry" />
+        </mxCell>
+        <mxCell id="-YNHQnOMQ-efhiL6uWhK-1" parent="1" style="ellipse;whiteSpace=wrap;html=1;align=center;aspect=fixed;flipH=0;legacyAnchorPoints=0;" value="VenueCity" vertex="1">
+          <mxGeometry height="50" width="100" x="-210" y="1060" as="geometry" />
+        </mxCell>
+        <mxCell id="-YNHQnOMQ-efhiL6uWhK-2" edge="1" parent="1" source="5YTaWoY79ZHOeUSu94uE-106" style="endArrow=none;html=1;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0;exitY=0.75;exitDx=0;exitDy=0;" target="-YNHQnOMQ-efhiL6uWhK-1" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="80" y="1073" as="sourcePoint" />
+            <mxPoint x="-30" y="1050" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>

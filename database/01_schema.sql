@@ -12,6 +12,7 @@ CREATE TABLE Users (
 
 CREATE TABLE Venue (
     VenueID SERIAL PRIMARY KEY,
+    VenueCity VARCHAR(100) NOT NULL,
     VenueName VARCHAR(150) NOT NULL,
     Capacity INT CHECK (Capacity > 0)
 );
@@ -75,7 +76,7 @@ CREATE TABLE ReportRev (
 
 CREATE INDEX idx_match_sport ON MATCHES(SportType);
 CREATE INDEX idx_match_datetime ON Matches(MatchDatetime);
-CREATE INDEX idx_users_city ON Users(ResidenceCity);
+CREATE INDEX idx_venue_city ON Venue(VenueCity);
 CREATE INDEX idx_ticket_class ON Ticket(TicketClass);
 
 CREATE INDEX idx_reservation_user ON Reservation(ReservationPhoneNum);

@@ -1,8 +1,14 @@
+import hashlib
+import json
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
+from redis.exceptions import RedisError
+
+from core.common.redis_client import redis_client
 
 from .queries import search_available_tickets
 
@@ -24,6 +30,9 @@ ALLOWED_SORT_OPTIONS = {
     "price_asc",
     "price_desc",
 }
+
+TICKET_SEARCH_CACHE_PREFIX = "tickets:search:v1"
+TICKET_SEARCH_CACHE_TTL_SECONDS = 600
 
 
 def _error_response(
@@ -111,6 +120,124 @@ def _get_date_parameter(request) -> date | None:
         raise ValueError("The date parameter must use YYYY-MM-DD format.") from exc
 
 
+def _read_cache(key: str):
+    """
+    Read JSON data from Redis.
+
+    Return None when:
+    - the cache entry does not exist;
+    - Redis is unavailable;
+    - the cached value contains invalid JSON.
+    """
+    try:
+        cached_value = redis_client.get(key)
+    except RedisError:
+        return None
+
+    if cached_value is None:
+        return None
+
+    try:
+        return json.loads(cached_value)
+    except json.JSONDecodeError:
+        try:
+            redis_client.delete(key)
+        except RedisError:
+            pass
+
+        return None
+
+
+def _write_cache(key: str, value) -> None:
+    """
+    Store a JSON-compatible value in Redis temporarily.
+    """
+    try:
+        serialized_value = json.dumps(
+            value,
+            cls=DjangoJSONEncoder,
+            ensure_ascii=False,
+        )
+
+        redis_client.setex(
+            key,
+            TICKET_SEARCH_CACHE_TTL_SECONDS,
+            serialized_value,
+        )
+    except RedisError:
+        pass
+
+
+def _normalize_decimal_for_cache(
+    value: Decimal | None,
+) -> str | None:
+    """
+    Convert equivalent Decimal values into the same cache value.
+
+    For example:
+        Decimal("50.0")
+        Decimal("50.00")
+
+    both become:
+        "50"
+    """
+    if value is None:
+        return None
+
+    return format(value.normalize(), "f")
+
+
+# functions for building a unique hash key
+def _normalize_text_for_cache(
+    value: str | None,
+) -> str | None:
+    """
+    Normalize case-insensitive text filters.
+    """
+    if value is None:
+        return None
+
+    return value.casefold()
+
+
+def _build_ticket_search_cache_key(
+    *,
+    sport: str | None,
+    team: str | None,
+    city: str | None,
+    venue: str | None,
+    ticket_class: str | None,
+    match_date: date | None,
+    min_price: Decimal | None,
+    max_price: Decimal | None,
+    sort: str,
+) -> str:
+    """
+    Build a stable cache key for one filter combination.
+    """
+    filter_data = {
+        "sport": _normalize_text_for_cache(sport),
+        "team": _normalize_text_for_cache(team),
+        "city": _normalize_text_for_cache(city),
+        "venue": _normalize_text_for_cache(venue),
+        "ticket_class": _normalize_text_for_cache(ticket_class),
+        "date": (match_date.isoformat() if match_date is not None else None),
+        "min_price": _normalize_decimal_for_cache(min_price),
+        "max_price": _normalize_decimal_for_cache(max_price),
+        "sort": sort,
+    }
+
+    serialized_filters = json.dumps(
+        filter_data,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+    filter_hash = hashlib.sha256(serialized_filters.encode("utf-8")).hexdigest()
+
+    return f"{TICKET_SEARCH_CACHE_PREFIX}:" f"{filter_hash}"
+
+
 @require_GET
 def search_tickets(request):
     """
@@ -172,7 +299,7 @@ def search_tickets(request):
             ("The min_price parameter cannot be greater " "than max_price."),
         )
 
-    tickets = search_available_tickets(
+    cache_key = _build_ticket_search_cache_key(
         sport=sport,
         team=team,
         city=city,
@@ -183,6 +310,23 @@ def search_tickets(request):
         max_price=max_price,
         sort=sort,
     )
+
+    tickets = _read_cache(cache_key)
+
+    if tickets is None:
+        tickets = search_available_tickets(
+            sport=sport,
+            team=team,
+            city=city,
+            venue=venue,
+            ticket_class=ticket_class,
+            match_date=match_date,
+            min_price=min_price,
+            max_price=max_price,
+            sort=sort,
+        )
+
+        _write_cache(cache_key, tickets)
 
     return JsonResponse(
         {

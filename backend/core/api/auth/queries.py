@@ -84,3 +84,31 @@ def create_user(
             hashed_password,
         ],
     )
+
+
+# otp
+
+GET_USER_FOR_OTP_SQL = """
+    SELECT
+        PhoneNumber AS phone_number,
+        Email AS email,
+        FirstName AS first_name,
+        LastName AS last_name,
+        ResidenceCity AS residence_city,
+        AccountStatus AS account_status,
+        UserRole AS role
+    FROM Users
+    WHERE PhoneNumber = %s;
+"""
+
+
+def get_user_for_otp(
+    phone_number: str,
+) -> dict | None:
+    """
+    Find one user by phone number for OTP login.
+    """
+    return fetch_one(
+        GET_USER_FOR_OTP_SQL,
+        [phone_number],
+    )

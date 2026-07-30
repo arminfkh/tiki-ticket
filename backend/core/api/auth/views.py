@@ -1,5 +1,6 @@
 import json
 import re
+import logging
 
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
@@ -15,9 +16,19 @@ from django.views.decorators.http import require_POST
 
 from core.common.authentication import create_access_token
 
-from .queries import create_user, get_signup_conflicts
+from .queries import create_user, get_signup_conflicts, get_user_for_otp
+
+from .otp_service import (
+    InvalidOTPError,
+    OTPCooldownError,
+    OTPServiceUnavailableError,
+    TooManyOTPAttemptsError,
+    generate_and_store_otp,
+    verify_otp_code,
+)
 
 PHONE_PATTERN = re.compile(r"^09\d{9}$")
+logger = logging.getLogger(__name__)
 
 
 def _error_response(
@@ -55,6 +66,24 @@ def _get_required_text(
         raise ValueError(f"The {field_name} field cannot be empty.")
 
     return value
+
+
+def _read_json_object(request) -> dict:
+    """
+    Read a JSON object from the request body.
+    """
+    try:
+        data = json.loads(request.body)
+    except (
+        json.JSONDecodeError,
+        UnicodeDecodeError,
+    ) as exc:
+        raise ValueError("The request body must contain valid JSON.") from exc
+
+    if not isinstance(data, dict):
+        raise ValueError("The JSON request body must be an object.")
+
+    return data
 
 
 @csrf_exempt
@@ -226,4 +255,184 @@ def signup(request):
             "user": user,
         },
         status=201,
+    )
+
+
+@csrf_exempt
+@require_POST
+def request_otp(request):
+    """
+    Generate and store an OTP for an existing active user.
+    """
+    try:
+        data = _read_json_object(request)
+
+        phone_number = _get_required_text(
+            data,
+            "phone_number",
+        )
+
+    except ValueError as exc:
+        return _error_response(
+            "invalid_request",
+            str(exc),
+        )
+
+    if not PHONE_PATTERN.fullmatch(phone_number):
+        return _error_response(
+            "invalid_phone_number",
+            ("The phone number must contain " "11 digits and start with 09."),
+        )
+
+    user = get_user_for_otp(phone_number)
+
+    if user is None:
+        return _error_response(
+            "user_not_found",
+            "No user was found with this phone number.",
+            status=404,
+        )
+
+    if user["account_status"] != "Active":
+        return _error_response(
+            "account_inactive",
+            "This user account is not active.",
+            status=403,
+        )
+
+    try:
+        otp = generate_and_store_otp(phone_number)
+
+    except OTPCooldownError as exc:
+        response = _error_response(
+            "otp_cooldown",
+            ("Please wait before requesting " "another OTP."),
+            status=429,
+        )
+
+        response["Retry-After"] = str(exc.retry_after)
+
+        return response
+
+    except OTPServiceUnavailableError:
+        return _error_response(
+            "otp_service_unavailable",
+            "The OTP service is temporarily unavailable.",
+            status=503,
+        )
+
+    response_data = {
+        "message": "OTP generated successfully.",
+        "expires_in": settings.OTP_TTL_SECONDS,
+    }
+
+    # Only for local development and Postman testing.
+    if settings.DEBUG:
+        response_data["debug_otp"] = otp
+
+        logger.warning(
+            "Development OTP for %s: %s",
+            phone_number,
+            otp,
+        )
+
+    return JsonResponse(
+        response_data,
+        status=200,
+    )
+
+
+@csrf_exempt
+@require_POST
+def verify_otp(request):
+    """
+    Verify an OTP and return a JWT access token.
+    """
+    try:
+        data = _read_json_object(request)
+
+        phone_number = _get_required_text(
+            data,
+            "phone_number",
+        )
+
+        otp = _get_required_text(
+            data,
+            "otp",
+        )
+
+    except ValueError as exc:
+        return _error_response(
+            "invalid_request",
+            str(exc),
+        )
+
+    if not PHONE_PATTERN.fullmatch(phone_number):
+        return _error_response(
+            "invalid_phone_number",
+            ("The phone number must contain " "11 digits and start with 09."),
+        )
+
+    if not otp.isdigit() or len(otp) != settings.OTP_LENGTH:
+        return _error_response(
+            "invalid_otp_format",
+            (f"The OTP must contain exactly " f"{settings.OTP_LENGTH} digits."),
+        )
+
+    user = get_user_for_otp(phone_number)
+
+    if user is None:
+        return _error_response(
+            "user_not_found",
+            "No user was found with this phone number.",
+            status=404,
+        )
+
+    if user["account_status"] != "Active":
+        return _error_response(
+            "account_inactive",
+            "This user account is not active.",
+            status=403,
+        )
+
+    try:
+        verify_otp_code(
+            phone_number,
+            otp,
+        )
+
+    except InvalidOTPError:
+        return _error_response(
+            "invalid_otp",
+            "The OTP is invalid or has expired.",
+        )
+
+    except TooManyOTPAttemptsError:
+        return _error_response(
+            "too_many_otp_attempts",
+            ("Too many incorrect attempts. " "Request a new OTP."),
+            status=429,
+        )
+
+    except OTPServiceUnavailableError:
+        return _error_response(
+            "otp_service_unavailable",
+            "The OTP service is temporarily unavailable.",
+            status=503,
+        )
+
+    access_token = create_access_token(
+        phone_number=user["phone_number"],
+        role=user["role"],
+    )
+
+    return JsonResponse(
+        {
+            "message": "Login successful.",
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "expires_in": (settings.JWT_ACCESS_TOKEN_MINUTES * 60),
+            "user": user,
+        },
+        status=200,
     )

@@ -1,4 +1,3 @@
-import json
 from datetime import date
 from decimal import Decimal
 
@@ -8,13 +7,9 @@ BASE_TICKET_SEARCH_SQL = """
     SELECT
         t.TicketID AS id,
         t.MatchID AS match_id,
-        t.SeatNumber AS seat_number,
-        t.SeatRow AS seat_row,
-        t.SeatSection AS seat_section,
         t.TicketClass AS ticket_class,
         t.TicketPrice AS price,
         t.RemainedCapacity AS remaining_capacity,
-        t.Facilities AS facilities,
 
         m.SportType AS sport,
         m.HomeTeam AS home_team,
@@ -24,8 +19,7 @@ BASE_TICKET_SEARCH_SQL = """
 
         v.VenueID AS venue_id,
         v.VenueName AS venue,
-        v.VenueCity AS city,
-        v.Capacity AS venue_capacity
+        v.VenueCity AS city
 
     FROM Ticket AS t
 
@@ -139,15 +133,4 @@ def search_available_tickets(
         ORDER BY {order_by_clause};
     """
 
-    tickets = fetch_all(query, params)
-
-    for ticket in tickets:
-        facilities = ticket.get("facilities")
-
-        if isinstance(facilities, str):
-            try:
-                ticket["facilities"] = json.loads(facilities)
-            except json.JSONDecodeError:
-                pass
-
-    return tickets
+    return fetch_all(query, params)

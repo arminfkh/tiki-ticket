@@ -10,7 +10,7 @@ from redis.exceptions import RedisError
 
 from core.common.redis_client import redis_client
 
-from .queries import search_available_tickets
+from .queries import search_available_tickets, get_ticket_details
 
 ALLOWED_SPORTS = {
     "football",
@@ -332,5 +332,31 @@ def search_tickets(request):
         {
             "count": len(tickets),
             "tickets": tickets,
+        }
+    )
+
+
+# api 6
+@require_GET
+def ticket_details(request, ticket_id: int):
+    """
+    Return complete information for one ticket.
+    """
+    ticket = get_ticket_details(ticket_id)
+
+    if ticket is None:
+        return JsonResponse(
+            {
+                "error": {
+                    "code": "ticket_not_found",
+                    "message": "No ticket was found with this ID.",
+                }
+            },
+            status=404,
+        )
+
+    return JsonResponse(
+        {
+            "ticket": ticket,
         }
     )

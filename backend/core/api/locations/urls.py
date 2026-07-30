@@ -1,5 +1,10 @@
 from django.urls import path
 
-app_name = "catalog"
+from .views import list_cities, list_venues
 
-urlpatterns = []
+app_name = "locations"
+
+urlpatterns = [
+    path("cities/", list_cities, name="city-list"),
+    path("venues/", list_venues, name="venue-list"),
+]

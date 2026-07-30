@@ -130,3 +130,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 REDIS_DB = int(os.getenv("REDIS_DB", "0"))
+
+JWT_SECRET_KEY = os.getenv(
+    "JWT_SECRET_KEY",
+    SECRET_KEY,
+)
+
+JWT_ALGORITHM = "HS256"
+
+JWT_ACCESS_TOKEN_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_MINUTES", "60"))

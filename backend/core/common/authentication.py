@@ -63,3 +63,28 @@ def decode_access_token(token: str) -> dict:
         raise InvalidAccessToken("The token is not an access token.")
 
     return payload
+
+
+def get_bearer_token(request) -> str:
+    """
+    Extract the JWT from the Authorization header.
+    """
+    authorization = request.headers.get(
+        "Authorization",
+        "",
+    )
+
+    parts = authorization.split()
+
+    if len(parts) != 2 or parts[0].casefold() != "bearer":
+        raise InvalidAccessToken("Authorization must use Bearer token.")
+
+    return parts[1]
+
+
+def get_authenticated_payload(request) -> dict:
+    """
+    Extract and verify the request's JWT.
+    """
+    token = get_bearer_token(request)
+    return decode_access_token(token)

@@ -1,0 +1,54 @@
+{
+  "info": {
+    "_postman_id": "0aa0e0d8-2022-45b7-85a5-1802086a09df",
+    "name": "TikiTIcket API 13",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57018771",
+    "_collection_link": "https://go.postman.co/collection/57018771-0aa0e0d8-2022-45b7-85a5-1802086a09df?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "API 13.1: Submit TIcket",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reservation_id\": 17,\n  \"category\": \"Seat Issue\",\n  \"description\": \"The seat information displayed on my ticket is incorrect.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/reports/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "reports",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

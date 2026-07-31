@@ -127,6 +127,23 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Redis
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 REDIS_DB = int(os.getenv("REDIS_DB", "0"))
+
+# JWT
+JWT_SECRET_KEY = os.getenv(
+    "JWT_SECRET_KEY",
+    SECRET_KEY,
+)
+
+JWT_ALGORITHM = "HS256"
+
+JWT_ACCESS_TOKEN_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_MINUTES", "60"))
+
+# OTP
+OTP_LENGTH = int(os.getenv("OTP_LENGTH", "6"))
+OTP_TTL_SECONDS = int(os.getenv("OTP_TTL_SECONDS", "120"))
+OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv("OTP_RESEND_COOLDOWN_SECONDS", "60"))
+OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "5"))

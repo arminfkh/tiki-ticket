@@ -1,0 +1,94 @@
+{
+  "info": {
+    "_postman_id": "386f451d-0683-47d7-9fb8-95e56e61ea20",
+    "name": "TikiTicket API 1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57018771",
+    "_collection_link": "https://go.postman.co/collection/57018771-386f451d-0683-47d7-9fb8-95e56e61ea20?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "API 1.1: Request OTP",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "",
+            "type": "text",
+            "disabled": true
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone_number\": \"09901200001\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/auth/otp/request/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "auth",
+            "otp",
+            "request",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API 1.2: Verify OTP",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone_number\": \"09901200001\",\n  \"otp\": \"968450\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/auth/otp/verify/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "auth",
+            "otp",
+            "verify",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "info": {
+    "_postman_id": "0ff0d734-4076-49f2-a30d-1ffd28dde230",
+    "name": "TikiTicket API 4",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57018771",
+    "_collection_link": "https://go.postman.co/collection/57018771-0ff0d734-4076-49f2-a30d-1ffd28dde230?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "API 4.1: Get Cities",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/locations/cities",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "locations",
+            "cities"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API 4.2: Get Venues",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/locations/venues/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "locations",
+            "venues",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API 4.3: Get Venues By City",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/locations/venues/?city=London",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "locations",
+            "venues",
+            ""
+          ],
+          "query": [
+            {
+              "key": "city",
+              "value": "London"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

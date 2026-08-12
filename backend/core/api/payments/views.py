@@ -1,16 +1,19 @@
 import json
 import logging
-import re
 
 from django.db import DatabaseError
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from core.common.authentication import (
+    InvalidAccessToken,
+    get_authenticated_payload,
+)
+
 from .queries import PaymentError, process_payment
 
 logger = logging.getLogger(__name__)
 
-PHONE_NUMBER_PATTERN = re.compile(r"^09\d{9}$")
 
 ALLOWED_PAYMENT_METHODS = {
     "Card",
@@ -55,6 +58,24 @@ def pay_for_reservation(request):
             status=405,
         )
 
+    # Authenticate user using JWT.
+    try:
+        payload = get_authenticated_payload(request)
+    except InvalidAccessToken as exc:
+        return JsonResponse(
+            {
+                "error": {
+                    "code": "invalid_access_token",
+                    "message": str(exc),
+                }
+            },
+            status=401,
+        )
+
+    # The authenticated user's phone number comes from the JWT,
+    # not from the request body.
+    phone_number = payload["sub"]
+
     try:
         body = json.loads(request.body)
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -80,7 +101,6 @@ def pay_for_reservation(request):
         )
 
     reservation_id = body.get("reservation_id")
-    phone_number = body.get("phone_number")
     payment_method = body.get("payment_method")
     simulate_result = body.get("simulate_result")
 
@@ -93,23 +113,7 @@ def pay_for_reservation(request):
             {
                 "error": {
                     "code": "INVALID_RESERVATION_ID",
-                    "message": ("reservation_id must be a positive integer."),
-                }
-            },
-            status=400,
-        )
-
-    if (
-        not isinstance(phone_number, str)
-        or PHONE_NUMBER_PATTERN.fullmatch(phone_number) is None
-    ):
-        return JsonResponse(
-            {
-                "error": {
-                    "code": "INVALID_PHONE_NUMBER",
-                    "message": (
-                        "phone_number must contain 11 digits " "and start with 09."
-                    ),
+                    "message": "reservation_id must be a positive integer.",
                 }
             },
             status=400,
@@ -120,7 +124,7 @@ def pay_for_reservation(request):
             {
                 "error": {
                     "code": "INVALID_PAYMENT_METHOD",
-                    "message": ("payment_method must be Card, Wallet, or Other."),
+                    "message": "payment_method must be Card, Wallet, or Other.",
                 }
             },
             status=400,

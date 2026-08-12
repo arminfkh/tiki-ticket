@@ -1,6 +1,9 @@
 import json
 from typing import Any
 
+from datetime import datetime
+from decimal import Decimal, ROUND_HALF_UP
+
 from core.common.database import (
     database_transaction,
     execute,
@@ -408,4 +411,168 @@ def get_user_reservations(
     return {
         "active_reservations": active_reservations,
         "reservation_history": reservation_history,
+    }
+
+
+# Calculate cancelation penalty
+
+
+def calculate_cancellation_penalty(
+    match_datetime: datetime,
+    paid_amount: Decimal,
+) -> dict[str, Any]:
+    """
+    Calculate a cancellation quote based on the remaining
+    time before the match.
+
+    This function does not read from or modify the database.
+    """
+
+    # MatchDatetime may be timezone-aware or timezone-naive,
+    # depending on the PostgreSQL/Django configuration.
+    if match_datetime.tzinfo is None:
+        current_time = datetime.now()
+    else:
+        current_time = datetime.now(tz=match_datetime.tzinfo)
+
+    seconds_until_match = (match_datetime - current_time).total_seconds()
+
+    paid_amount = Decimal(str(paid_amount))
+
+    # The match has already started.
+    if seconds_until_match <= 0:
+        return {
+            "can_cancel": False,
+            "hours_until_match": 0,
+            "penalty_percentage": Decimal("100.00"),
+            "penalty_amount": paid_amount,
+            "refund_amount": Decimal("0.000"),
+            "reason": "The match has already started.",
+        }
+
+    hours_until_match = (Decimal(str(seconds_until_match)) / Decimal("3600")).quantize(
+        Decimal("0.01"),
+        rounding=ROUND_HALF_UP,
+    )
+
+    if seconds_until_match >= 7 * 24 * 60 * 60:
+        penalty_percentage = Decimal("10.00")
+    elif seconds_until_match >= 3 * 24 * 60 * 60:
+        penalty_percentage = Decimal("20.00")
+    elif seconds_until_match >= 24 * 60 * 60:
+        penalty_percentage = Decimal("40.00")
+    else:
+        penalty_percentage = Decimal("70.00")
+
+    penalty_amount = (paid_amount * penalty_percentage / Decimal("100")).quantize(
+        Decimal("0.001"),
+        rounding=ROUND_HALF_UP,
+    )
+
+    refund_amount = (paid_amount - penalty_amount).quantize(
+        Decimal("0.001"),
+        rounding=ROUND_HALF_UP,
+    )
+
+    return {
+        "can_cancel": True,
+        "hours_until_match": hours_until_match,
+        "penalty_percentage": penalty_percentage,
+        "penalty_amount": penalty_amount,
+        "refund_amount": refund_amount,
+        "reason": (
+            "The penalty is calculated from the time " "remaining before the match."
+        ),
+    }
+
+
+def get_cancellation_quote(
+    reservation_id: int,
+    phone_number: str,
+) -> dict[str, Any]:
+    """
+    Return a cancellation quote for a paid reservation.
+
+    This function does not cancel the reservation and does
+    not modify any database records.
+    """
+
+    validate_spectator(phone_number)
+
+    reservation = fetch_one(
+        """
+        SELECT
+            r.ReservationID AS reservation_id,
+            r.ReservationPhoneNum AS phone_number,
+            r.ReservationStatus AS reservation_status,
+
+            t.TicketID AS ticket_id,
+            t.TicketClass AS ticket_class,
+
+            m.MatchID AS match_id,
+            m.HomeTeam AS home_team,
+            m.AwayTeam AS away_team,
+            m.MatchDatetime AS match_datetime,
+
+            (
+                SELECT p.PaymentAmount
+                FROM Payment AS p
+                WHERE p.ReservationID = r.ReservationID
+                  AND p.PaymentStatus = 'Success'
+                ORDER BY
+                    p.PaymentDatetime DESC,
+                    p.PaymentID DESC
+                LIMIT 1
+            ) AS paid_amount
+
+        FROM Reservation AS r
+        JOIN Ticket AS t
+            ON t.TicketID = r.TicketID
+        JOIN Matches AS m
+            ON m.MatchID = t.MatchID
+
+        WHERE r.ReservationID = %s;
+        """,
+        [reservation_id],
+    )
+
+    if reservation is None:
+        raise ReservationError(
+            "RESERVATION_NOT_FOUND",
+            "The requested reservation does not exist.",
+        )
+
+    if reservation["phone_number"] != phone_number:
+        raise ReservationError(
+            "RESERVATION_NOT_OWNED",
+            "This reservation belongs to another user.",
+        )
+
+    if reservation["reservation_status"] != "Paid":
+        raise ReservationError(
+            "RESERVATION_NOT_PAID",
+            ("Only paid reservations can receive " "a cancellation quote."),
+        )
+
+    if reservation["paid_amount"] is None:
+        raise ReservationError(
+            "SUCCESSFUL_PAYMENT_NOT_FOUND",
+            ("No successful payment was found " "for this reservation."),
+        )
+
+    penalty = calculate_cancellation_penalty(
+        match_datetime=reservation["match_datetime"],
+        paid_amount=reservation["paid_amount"],
+    )
+
+    return {
+        "reservation_id": reservation["reservation_id"],
+        "ticket_id": reservation["ticket_id"],
+        "ticket_class": reservation["ticket_class"],
+        "match_id": reservation["match_id"],
+        "home_team": reservation["home_team"],
+        "away_team": reservation["away_team"],
+        "match_datetime": reservation["match_datetime"],
+        "paid_amount": reservation["paid_amount"],
+        **penalty,
     }

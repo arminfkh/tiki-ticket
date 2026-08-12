@@ -1,5 +1,7 @@
 from core.common.database import execute_returning, fetch_one
 
+# sign up
+
 CHECK_SIGNUP_CONFLICTS_SQL = """
     SELECT
         EXISTS (
@@ -83,6 +85,33 @@ def create_user(
             residence_city,
             hashed_password,
         ],
+    )
+
+
+# password login
+
+GET_USER_FOR_LOGIN_SQL = """
+    SELECT
+        PhoneNumber AS phone_number,
+        Email AS email,
+        FirstName AS first_name,
+        LastName AS last_name,
+        ResidenceCity AS residence_city,
+        HashedPassword AS hashed_password,
+        AccountStatus AS account_status,
+        UserRole AS role
+    FROM Users
+    WHERE LOWER(Email) = LOWER(%s);
+"""
+
+
+def get_user_for_login(email: str) -> dict | None:
+    """
+    Find one user by email for password login.
+    """
+    return fetch_one(
+        GET_USER_FOR_LOGIN_SQL,
+        [email],
     )
 
 

@@ -3,7 +3,7 @@ import re
 import logging
 
 from django.conf import settings
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.password_validation import (
     validate_password,
 )
@@ -16,7 +16,12 @@ from django.views.decorators.http import require_POST
 
 from core.common.authentication import create_access_token
 
-from .queries import create_user, get_signup_conflicts, get_user_for_otp
+from .queries import (
+    create_user,
+    get_signup_conflicts,
+    get_user_for_otp,
+    get_user_for_login,
+)
 
 from .otp_service import (
     InvalidOTPError,
@@ -86,6 +91,7 @@ def _read_json_object(request) -> dict:
     return data
 
 
+# sign up
 @csrf_exempt
 @require_POST
 def signup(request):
@@ -258,6 +264,75 @@ def signup(request):
     )
 
 
+# password login
+@csrf_exempt
+@require_POST
+def login(request):
+    """
+    Authenticate an existing user with email and password
+    and return a JWT access token.
+    """
+    try:
+        data = _read_json_object(request)
+
+        email = _get_required_text(
+            data,
+            "email",
+        ).lower()
+
+        password = _get_required_text(
+            data,
+            "password",
+        )
+    except ValueError as exc:
+        return _error_response(
+            "invalid_request",
+            str(exc),
+        )
+
+    user = get_user_for_login(email)
+    if user is None or not check_password(password, user["hashed_password"]):
+        return _error_response(
+            "invalid_credentials",
+            "The email or password is incorrect.",
+            status=401,
+        )
+    if user["account_status"] != "Active":
+        return _error_response(
+            "account_inactive",
+            "This user account is not active.",
+            status=403,
+        )
+
+    access_token = create_access_token(
+        phone_number=user["phone_number"],
+        role=user["role"],
+    )
+
+    # prevent leaking the passoword hash
+    public_user = {
+        "phone_number": user["phone_number"],
+        "email": user["email"],
+        "first_name": user["first_name"],
+        "last_name": user["last_name"],
+        "residence_city": user["residence_city"],
+        "account_status": user["account_status"],
+        "role": user["role"],
+    }
+
+    return JsonResponse(
+        {
+            "message": "Login successful.",
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "expires_in": (settings.JWT_ACCESS_TOKEN_MINUTES * 60),
+            "user": public_user,
+        },
+        status=200,
+    )
+
+
+# otp
 @csrf_exempt
 @require_POST
 def request_otp(request):

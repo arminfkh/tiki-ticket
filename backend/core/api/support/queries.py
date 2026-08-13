@@ -60,16 +60,16 @@ def validate_support(phone_number: str) -> None:
         )
 
 
-def get_support_overview(
+def get_cancelled_tickets(
     support_phone_number: str,
-) -> dict[str, Any]:
+) -> list[dict[str, Any]]:
     """
-    Return information required by the support dashboard.
+    Return all cancelled ticket reservations.
     """
 
     validate_support(support_phone_number)
 
-    cancelled_tickets = fetch_all("""
+    return fetch_all("""
         SELECT
             r.ReservationID AS reservation_id,
             r.ReservationPhoneNum AS user_phone_number,
@@ -108,7 +108,114 @@ def get_support_overview(
         ORDER BY r.ReservationDateTime DESC;
         """)
 
-    manageable_reservations = fetch_all("""
+
+def get_suspicious_payments(
+    support_phone_number: str,
+) -> list[dict[str, Any]]:
+    """
+    Return failed and pending payments for support review.
+    """
+
+    validate_support(support_phone_number)
+
+    return fetch_all("""
+        SELECT
+            p.PaymentID AS payment_id,
+            p.ReservationID AS reservation_id,
+            p.PaymentAmount AS amount,
+            p.PaymentMethod AS payment_method,
+            p.PaymentDatetime AS payment_datetime,
+            p.PaymentStatus AS payment_status,
+
+            r.ReservationPhoneNum AS user_phone_number,
+            r.ReservationStatus AS reservation_status,
+
+            t.TicketID AS ticket_id,
+
+            m.MatchID AS match_id,
+            m.HomeTeam AS home_team,
+            m.AwayTeam AS away_team,
+            m.MatchDatetime AS match_datetime
+
+        FROM Payment AS p
+
+        JOIN Reservation AS r
+            ON r.ReservationID = p.ReservationID
+
+        JOIN Ticket AS t
+            ON t.TicketID = r.TicketID
+
+        JOIN Matches AS m
+            ON m.MatchID = t.MatchID
+
+        WHERE p.PaymentStatus IN (
+            'Failed',
+            'Pending'
+        )
+
+        ORDER BY p.PaymentDatetime DESC;
+        """)
+
+
+def get_user_reports(
+    support_phone_number: str,
+) -> list[dict[str, Any]]:
+    """
+    Return user reports for support review.
+    """
+
+    validate_support(support_phone_number)
+
+    return fetch_all("""
+        SELECT
+            rp.ReportID AS report_id,
+            rp.ReservationID AS reservation_id,
+            rp.SubmitterPhoneNum AS submitter_phone_number,
+            rp.ReportCategory AS category,
+            rp.ReportDescription AS description,
+            rp.ReportStatus AS status,
+
+            r.ReservationStatus AS reservation_status,
+
+            t.TicketID AS ticket_id,
+            t.TicketClass AS ticket_class,
+
+            m.MatchID AS match_id,
+            m.HomeTeam AS home_team,
+            m.AwayTeam AS away_team,
+            m.MatchDatetime AS match_datetime
+
+        FROM Report AS rp
+
+        JOIN Reservation AS r
+            ON r.ReservationID = rp.ReservationID
+
+        JOIN Ticket AS t
+            ON t.TicketID = r.TicketID
+
+        JOIN Matches AS m
+            ON m.MatchID = t.MatchID
+
+        ORDER BY
+            CASE
+                WHEN rp.ReportStatus = 'Pending'
+                    THEN 0
+                ELSE 1
+            END,
+            rp.ReportID DESC;
+        """)
+
+
+def get_manageable_reservations(
+    support_phone_number: str,
+) -> list[dict[str, Any]]:
+    """
+    Return active reservations that support can review.
+    """
+
+    validate_support(support_phone_number)
+
+    return fetch_all("""
         SELECT
             r.ReservationID AS reservation_id,
             r.ReservationPhoneNum AS user_phone_number,
@@ -145,89 +252,20 @@ def get_support_overview(
         ORDER BY r.ReservationDateTime DESC;
         """)
 
-    suspicious_payments = fetch_all("""
-        SELECT
-            p.PaymentID AS payment_id,
-            p.ReservationID AS reservation_id,
-            p.PaymentAmount AS amount,
-            p.PaymentMethod AS payment_method,
-            p.PaymentDatetime AS payment_datetime,
-            p.PaymentStatus AS payment_status,
-
-            r.ReservationPhoneNum AS user_phone_number,
-            r.ReservationStatus AS reservation_status
-
-        FROM Payment AS p
-
-        JOIN Reservation AS r
-            ON r.ReservationID = p.ReservationID
-
-        WHERE p.PaymentStatus IN (
-            'Failed',
-            'Pending'
-        )
-
-        ORDER BY p.PaymentDatetime DESC;
-        """)
-
-    user_reports = fetch_all("""
-        SELECT
-            rp.ReportID AS report_id,
-            rp.ReservationID AS reservation_id,
-            rp.SubmitterPhoneNum AS submitter_phone_number,
-            rp.ReportCategory AS category,
-            rp.ReportDescription AS description,
-            rp.ReportStatus AS status,
-
-            r.ReservationStatus AS reservation_status,
-
-            t.TicketID AS ticket_id,
-
-            m.HomeTeam AS home_team,
-            m.AwayTeam AS away_team,
-            m.MatchDatetime AS match_datetime
-
-        FROM Report AS rp
-
-        JOIN Reservation AS r
-            ON r.ReservationID = rp.ReservationID
-
-        JOIN Ticket AS t
-            ON t.TicketID = r.TicketID
-
-        JOIN Matches AS m
-            ON m.MatchID = t.MatchID
-
-        ORDER BY
-            CASE
-                WHEN rp.ReportStatus = 'Pending'
-                    THEN 0
-                ELSE 1
-            END,
-            rp.ReportID DESC;
-        """)
-
-    return {
-        "cancelled_tickets": cancelled_tickets,
-        "manageable_reservations": manageable_reservations,
-        "suspicious_payments": suspicious_payments,
-        "user_reports": user_reports,
-    }
-
 
 def cancel_reservation_by_support(
     reservation_id: int,
     support_phone_number: str,
 ) -> dict[str, Any]:
     """
-    Cancel a reservation by a support user.
+    Cancel a reservation by support.
 
     Reserved:
         Cancel and restore capacity.
 
     Paid:
-        Cancel, restore capacity, calculate the cancellation
-        refund, and add the refund to the spectator's wallet.
+        Cancel, restore capacity, calculate refund,
+        and add the refund to the user's wallet.
     """
 
     with database_transaction():
@@ -246,7 +284,10 @@ def cancel_reservation_by_support(
                 m.HomeTeam AS home_team,
                 m.AwayTeam AS away_team,
                 m.MatchDatetime AS match_datetime,
-                (m.MatchDatetime <= CURRENT_TIMESTAMP) AS match_started,
+
+                (
+                    m.MatchDatetime <= CURRENT_TIMESTAMP
+                ) AS match_started,
 
                 (
                     SELECT p.PaymentAmount
@@ -318,7 +359,7 @@ def cancel_reservation_by_support(
 
         if len(capacities) != 1:
             raise RuntimeError(
-                "The remaining capacities for this match " "are not synchronized."
+                "The remaining capacities for this match are not synchronized."
             )
 
         current_capacity = next(iter(capacities))
@@ -340,17 +381,13 @@ def cancel_reservation_by_support(
             if not penalty["can_cancel"]:
                 raise SupportError(
                     "MATCH_STARTED",
-                    (
-                        "The reservation cannot be cancelled "
-                        "after the match has started."
-                    ),
+                    "The reservation cannot be cancelled after the match has started.",
                 )
 
             wallet = execute_returning(
                 """
                 UPDATE Users
-                SET WalletBalance =
-                    WalletBalance + %s
+                SET WalletBalance = WalletBalance + %s
                 WHERE PhoneNumber = %s
                 RETURNING
                     WalletBalance AS wallet_balance;
@@ -404,8 +441,7 @@ def cancel_reservation_by_support(
         updated_count = execute(
             """
             UPDATE Ticket
-            SET RemainedCapacity =
-                RemainedCapacity + 1
+            SET RemainedCapacity = RemainedCapacity + 1
             WHERE MatchID = %s;
             """,
             [reservation["match_id"]],
@@ -425,3 +461,81 @@ def cancel_reservation_by_support(
             "refund": refund,
             "remained_capacity": current_capacity + 1,
         }
+
+
+def review_report_by_support(
+    report_id: int,
+    support_phone_number: str,
+) -> dict[str, Any]:
+    """
+    Mark a pending report as reviewed by support.
+    """
+
+    with database_transaction():
+        validate_support(support_phone_number)
+
+        report = fetch_one(
+            """
+            SELECT
+                ReportID AS report_id,
+                ReservationID AS reservation_id,
+                SubmitterPhoneNum AS submitter_phone_number,
+                ReportCategory AS category,
+                ReportDescription AS description,
+                ReportStatus AS status
+            FROM Report
+            WHERE ReportID = %s
+            FOR UPDATE;
+            """,
+            [report_id],
+        )
+
+        if report is None:
+            raise SupportError(
+                "REPORT_NOT_FOUND",
+                "The requested report does not exist.",
+            )
+
+        if report["status"] == "Reviewed":
+            raise SupportError(
+                "REPORT_ALREADY_REVIEWED",
+                "This report has already been reviewed.",
+            )
+
+        reviewed_report = execute_returning(
+            """
+            UPDATE Report
+            SET ReportStatus = 'Reviewed'
+            WHERE ReportID = %s
+              AND ReportStatus = 'Pending'
+            RETURNING
+                ReportID AS report_id,
+                ReservationID AS reservation_id,
+                SubmitterPhoneNum AS submitter_phone_number,
+                ReportCategory AS category,
+                ReportDescription AS description,
+                ReportStatus AS status;
+            """,
+            [report_id],
+        )
+
+        if reviewed_report is None:
+            raise RuntimeError("The report could not be marked as reviewed.")
+
+        execute(
+            """
+            INSERT INTO ReportRev (
+                ReportID,
+                ReviewerPhoneNum
+            )
+            VALUES (%s, %s);
+            """,
+            [
+                report_id,
+                support_phone_number,
+            ],
+        )
+
+        reviewed_report["reviewer_phone_number"] = support_phone_number
+
+        return reviewed_report

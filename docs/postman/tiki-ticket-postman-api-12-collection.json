@@ -1,0 +1,119 @@
+{
+  "info": {
+    "_postman_id": "d1856229-2ee9-4f78-9fca-ecd793448355",
+    "name": "API 12 - Reservations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57018859",
+    "_collection_link": "https://go.postman.co/collection/57018859-d1856229-2ee9-4f78-9fca-ecd793448355?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "API 12.1: Cancel Paid Reservation Successfully",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/reservations/32/cancel/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "reservations",
+            "32",
+            "cancel",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API 12.2: Cancel Already Cancelled Reservation",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/reservations/32/cancel/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "reservations",
+            "32",
+            "cancel",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API 12.3: Block Cancellation After Match Starts",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token1}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/reservations/1/cancel/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "reservations",
+            "1",
+            "cancel",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

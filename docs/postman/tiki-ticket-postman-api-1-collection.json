@@ -1,0 +1,120 @@
+{
+  "info": {
+    "_postman_id": "386f451d-0683-47d7-9fb8-95e56e61ea20",
+    "name": "TikiTicket API 1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57018771",
+    "_collection_link": "https://go.postman.co/collection/57018771-386f451d-0683-47d7-9fb8-95e56e61ea20?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "API 1.1: Request OTP",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"arminfakhar2005@gmail.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/auth/login/otp/request/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "auth",
+            "login",
+            "otp",
+            "request",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API 1.2: Login with OTP",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"arminfakhar2005@gmail.com\",\n    \"otp\": \"642979\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/auth/login/otp/verify/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "auth",
+            "login",
+            "otp",
+            "verify",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API 1.3: Login with Password",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"arminfakhar2005@gmail.com\",\n    \"password\": \"TestPassword123!\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/auth/login/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "auth",
+            "login",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

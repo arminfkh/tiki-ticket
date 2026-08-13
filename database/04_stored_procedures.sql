@@ -78,7 +78,7 @@ AS $$
 
     ORDER BY sp.PurchaseDatetime DESC;
 $$
-LANGUAGE SQL
+LANGUAGE SQL;
 
 
 -- 2) Given a support staff member’s email or phone number, list users whose reservations were cancelled at least once.
@@ -116,7 +116,7 @@ AS $$
         ON customer.PhoneNumber = r.ReservationPhoneNum
     WHERE r.ReservationStatus = 'Cancelled';
 $$
-LANGUAGE SQL
+LANGUAGE SQL;
 
 
 -- 3) Given a city name, list the tickets purchased in that city.
@@ -334,7 +334,10 @@ AS $$
         u.Email,
         u.FirstName,
         u.LastName
-
+    ORDER BY
+        PurchaseCount DESC,
+        u.LastName,
+        u.FirstName
     LIMIT p_n;
 $$
 LANGUAGE SQL;

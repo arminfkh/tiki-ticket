@@ -7,7 +7,11 @@ CREATE TABLE Users (
 	HashedPassword VARCHAR(255) NOT NULL,
 	SignUpDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	AccountStatus VARCHAR(20) CHECK (AccountStatus IN ('Active', 'Inactive')),
-	UserRole VARCHAR(20) CHECK (UserRole IN ('Spectator', 'Support'))	
+	UserRole VARCHAR(20) CHECK (UserRole IN ('Spectator', 'Support')),
+    WalletBalance NUMERIC(12, 3) NOT NULL DEFAULT 0.000,
+
+    CONSTRAINT chk_wallet_balance
+        CHECK (WalletBalance >= 0)	
 );
 
 CREATE TABLE Venue (

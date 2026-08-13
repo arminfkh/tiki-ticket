@@ -22,7 +22,7 @@ VALUES
     ('09901200006', 'marie.curie@example.com',       'Marie',   'Curie',       'Warsaw',   'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-01-15 09:40:00', 'Active',   'Spectator'),
     ('09901200007', 'richard.feynman@example.com',   'Richard', 'Feynman',     'New York', 'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-03-22 12:05:00', 'Active',   'Spectator'),
     ('09901200008', 'louis.pasteur@example.com',     'Louis',   'Pasteur',     'Dole',     'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-05-19 15:35:00', 'Active',   'Spectator'),
-    ('09901200009', 'galileo.galilei@example.com',   'Galileo', 'Galilei',     'Paris',    'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-07-07 17:20:00', 'Inactive', 'Spectator'),
+    ('09901200009', 'galileo.galilei@example.com',   'Galileo', 'Galilei',     'Paris',    'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-07-07 17:20:00', 'Inactive', 'Spectator');
 
 
 -- Insert Venues

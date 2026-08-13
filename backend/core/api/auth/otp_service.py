@@ -1,3 +1,12 @@
+"""
+reusable OTP engine.
+It defines the three purposes (signup, login, password_reset),
+
+generates random OTPs, hashes them, stores them in Redis with TTL,
+enforces resend cooldowns, counts incorrect attempts, verifies codes,
+and deletes OTP state after success.
+"""
+
 import secrets
 
 from django.conf import settings
@@ -8,6 +17,16 @@ from django.contrib.auth.hashers import (
 from redis.exceptions import RedisError
 
 from core.common.redis_client import redis_client
+
+OTP_PURPOSE_SIGNUP = "signup"
+OTP_PURPOSE_PASSWORD_RESET = "password_reset"
+OTP_PURPOSE_LOGIN = "login"
+
+ALLOWED_OTP_PURPOSES = {
+    OTP_PURPOSE_SIGNUP,
+    OTP_PURPOSE_PASSWORD_RESET,
+    OTP_PURPOSE_LOGIN,
+}
 
 
 class OTPError(Exception):
@@ -44,27 +63,30 @@ class OTPServiceUnavailableError(OTPError):
     """
 
 
-def _otp_key(phone_number: str) -> str:
-    return f"auth:otp:{phone_number}"
+def _otp_key(email: str, purpose: str) -> str:
+    return f"auth:otp:{purpose}:{email}"
 
 
-def _attempts_key(phone_number: str) -> str:
-    return f"auth:otp:attempts:{phone_number}"
+def _attempts_key(email: str, purpose: str) -> str:
+    return f"auth:otp:attempts:{purpose}:{email}"
 
 
-def _cooldown_key(phone_number: str) -> str:
-    return f"auth:otp:cooldown:{phone_number}"
+def _cooldown_key(email: str, purpose: str) -> str:
+    return f"auth:otp:cooldown:{purpose}:{email}"
 
 
-def generate_and_store_otp(phone_number: str) -> str:
+def generate_and_store_otp(email: str, purpose: str) -> str:
     """
     Generate an OTP and store its hash in Redis.
-
     Return the plain OTP so it can be delivered to the user.
     """
-    otp_key = _otp_key(phone_number)
-    attempts_key = _attempts_key(phone_number)
-    cooldown_key = _cooldown_key(phone_number)
+
+    _validate_purpose(purpose)
+    email = email.strip().lower()
+
+    otp_key = _otp_key(email, purpose)
+    attempts_key = _attempts_key(email, purpose)
+    cooldown_key = _cooldown_key(email, purpose)
 
     try:
         cooldown_created = redis_client.set(
@@ -81,8 +103,8 @@ def generate_and_store_otp(phone_number: str) -> str:
 
         maximum_value = 10**settings.OTP_LENGTH
 
+        # 6-digit otp
         otp = str(secrets.randbelow(maximum_value)).zfill(settings.OTP_LENGTH)
-
         hashed_otp = make_password(otp)
 
         pipeline = redis_client.pipeline()
@@ -107,18 +129,19 @@ def generate_and_store_otp(phone_number: str) -> str:
         ) from exc
 
 
-def verify_otp_code(
-    phone_number: str,
-    submitted_otp: str,
-) -> None:
+def verify_otp_code(email: str, purpose: str, submitted_otp: str) -> None:
     """
     Verify one submitted OTP.
 
     Delete the OTP after successful verification so it cannot be reused.
     """
-    otp_key = _otp_key(phone_number)
-    attempts_key = _attempts_key(phone_number)
-    cooldown_key = _cooldown_key(phone_number)
+
+    _validate_purpose(purpose)
+    email = email.strip().lower()
+
+    otp_key = _otp_key(email, purpose)
+    attempts_key = _attempts_key(email, purpose)
+    cooldown_key = _cooldown_key(email, purpose)
 
     try:
         hashed_otp = redis_client.get(otp_key)
@@ -176,3 +199,34 @@ def verify_otp_code(
         raise OTPServiceUnavailableError(
             "The OTP service is temporarily unavailable."
         ) from exc
+
+
+# manual cleanup
+def delete_otp(email: str, purpose: str) -> None:
+    """
+    Delete all Redis data related to one OTP.
+    """
+    _validate_purpose(purpose)
+
+    email = email.strip().lower()
+
+    otp_key = _otp_key(email, purpose)
+    attempts_key = _attempts_key(email, purpose)
+    cooldown_key = _cooldown_key(email, purpose)
+
+    try:
+        redis_client.delete(
+            otp_key,
+            attempts_key,
+            cooldown_key,
+        )
+
+    except RedisError as exc:
+        raise OTPServiceUnavailableError(
+            "The OTP service is temporarily unavailable."
+        ) from exc
+
+
+def _validate_purpose(purpose: str) -> None:
+    if purpose not in ALLOWED_OTP_PURPOSES:
+        raise ValueError("Unsupported OTP purpose.")

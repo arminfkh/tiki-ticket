@@ -41,7 +41,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"phone_number\": \"09900000000\",\n  \"email\": \"newuser@example.com\",\n  \"first_name\": \"New\",\n  \"last_name\": \"User\",\n  \"residence_city\": \"Tehran\",\n  \"password\": \"A_StrongPassword_2026!\"\n}",
+          "raw": "{\n  \"phone_number\": \"09900000000\",\n  \"email\": \"arminfakhar1384@gmail.com\",\n  \"first_name\": \"New\",\n  \"last_name\": \"User\",\n  \"residence_city\": \"Tehran\",\n  \"password\": \"A_StrongPassword_2026!\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -62,6 +62,41 @@
             "api",
             "auth",
             "signup",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API 2.2: Verify SIgnUp",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"arminfakhar1384@gmail.com\",\n    \"otp\": \"794750\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/auth/signup/verify/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "auth",
+            "signup",
+            "verify",
             ""
           ]
         }

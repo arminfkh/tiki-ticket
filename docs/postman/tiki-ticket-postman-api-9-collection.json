@@ -1,0 +1,95 @@
+{
+  "info": {
+    "_postman_id": "ce0746c1-3df7-409b-8ede-94b2187cbb8a",
+    "name": "API 9 - Reservations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57018859",
+    "_collection_link": "https://go.postman.co/collection/57018859-ce0746c1-3df7-409b-8ede-94b2187cbb8a?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "API 9.1: Calculate Cancellation Quote Successfully",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/reservations/32/cancellation-quote/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "reservations",
+            "32",
+            "cancellation-quote",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API 9.2: Return Non-Cancellable Quote After Match Starts",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token1}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/reservations/1/cancellation-quote/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "reservations",
+            "1",
+            "cancellation-quote",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

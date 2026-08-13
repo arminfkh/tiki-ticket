@@ -10,19 +10,19 @@ VALUES
     -- Password: SupportPassword123!
     ('09901200111', 'alan.turing@example.com',       'Alan',    'Turing',      'London',   'pbkdf2_sha256$1000000$kzZ6YMY9jjetju52drc8VB$V8eBIbbAJ5Ac7me6hM41BEJwSYJEx074SDKq9GF8nuw=', '2024-03-10 09:15:00', 'Active',   'Support'),
     ('09901200222', 'grace.hopper@example.com',      'Grace',   'Hopper',      'London',   'pbkdf2_sha256$1000000$kzZ6YMY9jjetju52drc8VB$V8eBIbbAJ5Ac7me6hM41BEJwSYJEx074SDKq9GF8nuw=', '2024-08-14 10:45:00', 'Active',   'Support'),
-    ('09901200333', 'ada.lovelace@example.com',      'Ada',     'Lovelace',    'London',   'pbkdf2_sha256$1000000$kzZ6YMY9jjetju52drc8VB$V8eBIbbAJ5Ac7me6hM41BEJwSYJEx074SDKq9GF8nuw=', '2024-04-12 11:30:00', 'Active',   'Support'),
+    ('09901200333', 'abedii.mni@gmail.com',          'Mani',    'Abedi',       'London',   'pbkdf2_sha256$1000000$kzZ6YMY9jjetju52drc8VB$V8eBIbbAJ5Ac7me6hM41BEJwSYJEx074SDKq9GF8nuw=', '2024-04-12 11:30:00', 'Active',   'Support'),
 
     -- Spectators
     -- Password: TestPassword123!
-    ('09901200001', 'linus.torvalds@example.com',    'Linus',   'Torvalds',    'Helsinki', 'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2024-05-18 14:20:00', 'Active',   'Spectator'),
-    ('09901200002', 'tim.berners-lee@example.com',   'Tim',     'Berners-Lee', 'Helsinki', 'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2024-01-05 08:00:00', 'Active',   'Spectator'),
-    ('09901200003', 'albert.einstein@example.com',   'Albert',  'Einstein',    'Warsaw',   'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2024-06-25 16:10:00', 'Active',   'Spectator'),
-    ('09901200004', 'isaac.newton@example.com',      'Isaac',   'Newton',      'London',   'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2024-10-08 13:25:00', 'Active',   'Spectator'),
-    ('09901200005', 'marie.curie@example.com',       'Marie',   'Curie',       'Warsaw',   'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-01-15 09:40:00', 'Active',   'Spectator'),
-    ('09901200006', 'richard.feynman@example.com',   'Richard', 'Feynman',     'New York', 'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-03-22 12:05:00', 'Active',   'Spectator'),
-    ('09901200007', 'louis.pasteur@example.com',     'Louis',   'Pasteur',     'Dole',     'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-05-19 15:35:00', 'Active',   'Spectator'),
-    ('09901200008', 'galileo.galilei@example.com',   'Galileo', 'Galilei',     'Paris',    'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-07-07 17:20:00', 'Inactive', 'Spectator'),
-    ('09901200009', 'nikola.tesla@example.com',      'Nikola',  'Tesla',       'New York', 'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-09-11 11:55:00', 'Active',   'Spectator');
+    ('09901200001', 'arminfakhar2005@gmail.com',     'Armin',   'Fakhar',      'New York', 'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2024-05-18 14:20:00', 'Active',   'Spectator'),
+    ('09901200002', 'linus.torvalds@example.com',    'Linus',   'Torvalds',    'Helsinki', 'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2024-05-18 14:20:00', 'Active',   'Spectator'),
+    ('09901200003', 'tim.berners-lee@example.com',   'Tim',     'Berners-Lee', 'Helsinki', 'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2024-01-05 08:00:00', 'Active',   'Spectator'),
+    ('09901200004', 'albert.einstein@example.com',   'Albert',  'Einstein',    'Warsaw',   'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2024-06-25 16:10:00', 'Active',   'Spectator'),
+    ('09901200005', 'isaac.newton@example.com',      'Isaac',   'Newton',      'London',   'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2024-10-08 13:25:00', 'Active',   'Spectator'),
+    ('09901200006', 'marie.curie@example.com',       'Marie',   'Curie',       'Warsaw',   'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-01-15 09:40:00', 'Active',   'Spectator'),
+    ('09901200007', 'richard.feynman@example.com',   'Richard', 'Feynman',     'New York', 'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-03-22 12:05:00', 'Active',   'Spectator'),
+    ('09901200008', 'louis.pasteur@example.com',     'Louis',   'Pasteur',     'Dole',     'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-05-19 15:35:00', 'Active',   'Spectator'),
+    ('09901200009', 'galileo.galilei@example.com',   'Galileo', 'Galilei',     'Paris',    'pbkdf2_sha256$1000000$VjArQrUAdRmz7wGLWX63K1$LsrbI6/AUsgtluybtfzrkWp7L2rrO2CaYzYKFbjbHqA=',    '2025-07-07 17:20:00', 'Inactive', 'Spectator'),
 
 
 -- Insert Venues

@@ -1,0 +1,45 @@
+{
+  "info": {
+    "_postman_id": "e467234b-456c-4094-8e9c-01b48bbd58cc",
+    "name": "API 11 - Bookings",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57018859",
+    "_collection_link": "https://go.postman.co/collection/57018859-e467234b-456c-4094-8e9c-01b48bbd58cc?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "API 11.1: List User Bookings Successfully",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token1}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/bookings/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "bookings",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

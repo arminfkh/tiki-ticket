@@ -12,6 +12,7 @@ from core.common.authentication import (
 
 from .queries import (
     ReservationError,
+    cancel_paid_reservation,
     create_reservation,
     get_cancellation_quote,
     get_user_reservations,
@@ -34,6 +35,7 @@ ERROR_STATUS_CODES = {
     "RESERVATION_NOT_OWNED": 403,
     "RESERVATION_NOT_PAID": 409,
     "SUCCESSFUL_PAYMENT_NOT_FOUND": 409,
+    "RESERVATION_ALREADY_CANCELLED": 409,
 }
 
 
@@ -333,6 +335,101 @@ def cancellation_quote(request, reservation_id):
         {
             "message": "Cancellation penalty calculated successfully.",
             "cancellation_quote": quote,
+        },
+        status=200,
+    )
+
+
+# Cancle a reservation
+
+
+@csrf_exempt
+def cancel_reservation(request, reservation_id):
+    """
+    POST /api/reservations/<reservation_id>/cancel/
+    """
+
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "error": {
+                    "code": "METHOD_NOT_ALLOWED",
+                    "message": "Only POST requests are allowed.",
+                }
+            },
+            status=405,
+        )
+
+    try:
+        payload = get_authenticated_payload(request)
+    except InvalidAccessToken as exc:
+        return JsonResponse(
+            {
+                "error": {
+                    "code": "invalid_access_token",
+                    "message": str(exc),
+                }
+            },
+            status=401,
+        )
+
+    phone_number = payload["sub"]
+
+    try:
+        result = cancel_paid_reservation(
+            reservation_id=reservation_id,
+            phone_number=phone_number,
+        )
+
+    except ReservationError as error:
+        return JsonResponse(
+            {
+                "error": {
+                    "code": error.code,
+                    "message": error.message,
+                }
+            },
+            status=ERROR_STATUS_CODES.get(
+                error.code,
+                400,
+            ),
+        )
+
+    except DatabaseError:
+        logger.exception("Database error while cancelling a reservation.")
+
+        return JsonResponse(
+            {
+                "error": {
+                    "code": "DATABASE_ERROR",
+                    "message": (
+                        "The reservation could not be cancelled "
+                        "because of a database error."
+                    ),
+                }
+            },
+            status=500,
+        )
+
+    except Exception:
+        logger.exception("Unexpected error while cancelling a reservation.")
+
+        return JsonResponse(
+            {
+                "error": {
+                    "code": "INTERNAL_SERVER_ERROR",
+                    "message": ("An unexpected server error occurred."),
+                }
+            },
+            status=500,
+        )
+
+    return JsonResponse(
+        {
+            "message": (
+                "Reservation cancelled and refund added " "to wallet successfully."
+            ),
+            **result,
         },
         status=200,
     )

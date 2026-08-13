@@ -163,6 +163,9 @@ def prepare_match_capacity(
     return len(match_tickets), current_capacity
 
 
+# Reserve a ticket
+
+
 def create_reservation(
     ticket_id: int,
     phone_number: str,
@@ -576,3 +579,176 @@ def get_cancellation_quote(
         "paid_amount": reservation["paid_amount"],
         **penalty,
     }
+
+
+# Cancle a reservation
+
+
+def cancel_paid_reservation(
+    reservation_id: int,
+    phone_number: str,
+) -> dict[str, Any]:
+    """
+    Cancel a paid reservation and refund the allowed amount
+    to the authenticated user's wallet.
+    """
+
+    with database_transaction():
+        validate_spectator(phone_number)
+
+        reservation = fetch_one(
+            """
+            SELECT
+                r.ReservationID AS reservation_id,
+                r.ReservationPhoneNum AS phone_number,
+                r.ReservationStatus AS reservation_status,
+
+                t.TicketID AS ticket_id,
+                t.TicketClass AS ticket_class,
+
+                m.MatchID AS match_id,
+                m.HomeTeam AS home_team,
+                m.AwayTeam AS away_team,
+                m.MatchDatetime AS match_datetime,
+
+                (
+                    SELECT p.PaymentAmount
+                    FROM Payment AS p
+                    WHERE p.ReservationID = r.ReservationID
+                      AND p.PaymentStatus = 'Success'
+                    ORDER BY
+                        p.PaymentDatetime DESC,
+                        p.PaymentID DESC
+                    LIMIT 1
+                ) AS paid_amount
+
+            FROM Reservation AS r
+            JOIN Ticket AS t
+                ON t.TicketID = r.TicketID
+            JOIN Matches AS m
+                ON m.MatchID = t.MatchID
+
+            WHERE r.ReservationID = %s
+
+            FOR UPDATE OF r;
+            """,
+            [reservation_id],
+        )
+
+        if reservation is None:
+            raise ReservationError(
+                "RESERVATION_NOT_FOUND",
+                "The requested reservation does not exist.",
+            )
+
+        if reservation["phone_number"] != phone_number:
+            raise ReservationError(
+                "RESERVATION_NOT_OWNED",
+                "This reservation belongs to another user.",
+            )
+
+        if reservation["reservation_status"] == "Cancelled":
+            raise ReservationError(
+                "RESERVATION_ALREADY_CANCELLED",
+                "This reservation has already been cancelled.",
+            )
+
+        if reservation["reservation_status"] != "Paid":
+            raise ReservationError(
+                "RESERVATION_NOT_PAID",
+                "Only paid reservations can be cancelled.",
+            )
+
+        if reservation["paid_amount"] is None:
+            raise ReservationError(
+                "SUCCESSFUL_PAYMENT_NOT_FOUND",
+                "No successful payment was found for this reservation.",
+            )
+
+        penalty = calculate_cancellation_penalty(
+            match_datetime=reservation["match_datetime"],
+            paid_amount=reservation["paid_amount"],
+        )
+
+        if not penalty["can_cancel"]:
+            raise ReservationError(
+                "MATCH_STARTED",
+                "The ticket cannot be cancelled after the match has started.",
+            )
+
+        match_id = reservation["match_id"]
+
+        # Lock match tickets and make sure shared capacity is synchronized.
+        ticket_count, current_capacity = prepare_match_capacity(match_id)
+
+        cancelled_reservation = execute_returning(
+            """
+            UPDATE Reservation
+            SET
+                ReservationStatus = 'Cancelled',
+                CancellationPhoneNum = %s
+            WHERE ReservationID = %s
+              AND ReservationStatus = 'Paid'
+            RETURNING
+                ReservationID AS reservation_id,
+                TicketID AS ticket_id,
+                ReservationPhoneNum AS phone_number,
+                CancellationPhoneNum AS cancellation_phone_number,
+                ReservationStatus AS status;
+            """,
+            [
+                phone_number,
+                reservation_id,
+            ],
+        )
+
+        if cancelled_reservation is None:
+            raise RuntimeError("The reservation could not be cancelled.")
+
+        # Return one seat to the shared match capacity.
+        updated_count = execute(
+            """
+            UPDATE Ticket
+            SET RemainedCapacity = RemainedCapacity + 1
+            WHERE MatchID = %s;
+            """,
+            [match_id],
+        )
+
+        if updated_count != ticket_count:
+            raise RuntimeError("Not all ticket capacities were restored.")
+
+        wallet = execute_returning(
+            """
+            UPDATE Users
+            SET WalletBalance = WalletBalance + %s
+            WHERE PhoneNumber = %s
+            RETURNING
+                WalletBalance AS wallet_balance;
+            """,
+            [
+                penalty["refund_amount"],
+                phone_number,
+            ],
+        )
+
+        if wallet is None:
+            raise RuntimeError("The refund could not be added to the user's wallet.")
+
+        return {
+            "reservation": cancelled_reservation,
+            "match": {
+                "match_id": reservation["match_id"],
+                "home_team": reservation["home_team"],
+                "away_team": reservation["away_team"],
+                "match_datetime": reservation["match_datetime"],
+            },
+            "refund": {
+                "paid_amount": reservation["paid_amount"],
+                "penalty_percentage": penalty["penalty_percentage"],
+                "penalty_amount": penalty["penalty_amount"],
+                "refund_amount": penalty["refund_amount"],
+            },
+            "wallet_balance": wallet["wallet_balance"],
+            "remained_capacity": current_capacity + 1,
+        }

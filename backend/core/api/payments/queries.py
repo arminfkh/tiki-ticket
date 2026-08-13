@@ -69,6 +69,11 @@ def process_payment(
 
     Failed payment:
         Reservation remains Reserved.
+
+    Wallet payment:
+        The user's wallet balance is checked and locked.
+        If the balance is sufficient, the ticket price is deducted
+        and the payment is completed successfully.
     """
 
     error_after_commit: PaymentError | None = None
@@ -121,7 +126,7 @@ def process_payment(
 
         if len(capacities) != 1:
             raise RuntimeError(
-                "The remaining capacities for this match " "are not synchronized."
+                "The remaining capacities for this match are not synchronized."
             )
 
         reservation = fetch_one(
@@ -273,6 +278,57 @@ def process_payment(
                     "A successful payment already exists for this reservation.",
                 )
 
+            wallet_balance = None
+
+            if payment_method == "Wallet":
+                wallet = fetch_one(
+                    """
+                    SELECT
+                        WalletBalance AS wallet_balance
+                    FROM Users
+                    WHERE PhoneNumber = %s
+                    FOR UPDATE;
+                    """,
+                    [phone_number],
+                )
+
+                if wallet is None:
+                    raise PaymentError(
+                        "USER_NOT_FOUND",
+                        "No user was found with this phone number.",
+                    )
+
+                if wallet["wallet_balance"] < reservation["ticket_price"]:
+                    raise PaymentError(
+                        "INSUFFICIENT_WALLET_BALANCE",
+                        (
+                            "The wallet balance is not enough "
+                            "to complete this payment."
+                        ),
+                    )
+
+                updated_wallet = execute_returning(
+                    """
+                    UPDATE Users
+                    SET WalletBalance = WalletBalance - %s
+                    WHERE PhoneNumber = %s
+                    RETURNING
+                        WalletBalance AS wallet_balance;
+                    """,
+                    [
+                        reservation["ticket_price"],
+                        phone_number,
+                    ],
+                )
+
+                if updated_wallet is None:
+                    raise RuntimeError("The wallet balance could not be updated.")
+
+                wallet_balance = updated_wallet["wallet_balance"]
+
+                # A wallet payment succeeds when sufficient balance exists.
+                payment_status = "Success"
+
             payment = execute_returning(
                 """
                 INSERT INTO Payment (
@@ -307,6 +363,9 @@ def process_payment(
 
             if payment is None:
                 raise RuntimeError("PostgreSQL did not return the created payment.")
+
+            if payment_method == "Wallet":
+                payment["wallet_balance"] = wallet_balance
 
             if payment_status == "Success":
                 updated_reservation = execute_returning(

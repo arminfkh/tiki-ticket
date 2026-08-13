@@ -38,6 +38,7 @@ ERROR_STATUS_CODES = {
     "RESERVATION_EXPIRED": 409,
     "MATCH_STARTED": 409,
     "PAYMENT_ALREADY_SUCCESSFUL": 409,
+    "INSUFFICIENT_WALLET_BALANCE": 402,
 }
 
 
@@ -102,7 +103,6 @@ def pay_for_reservation(request):
 
     reservation_id = body.get("reservation_id")
     payment_method = body.get("payment_method")
-    simulate_result = body.get("simulate_result")
 
     if (
         not isinstance(reservation_id, int)
@@ -130,23 +130,34 @@ def pay_for_reservation(request):
             status=400,
         )
 
-    if simulate_result not in ALLOWED_PAYMENT_RESULTS:
-        return JsonResponse(
-            {
-                "error": {
-                    "code": "INVALID_PAYMENT_RESULT",
-                    "message": ("simulate_result must be Pending, Success or Failed."),
-                }
-            },
-            status=400,
-        )
+    # Wallet payments are determined by the user's real wallet balance.
+    # simulate_result is only required for Card and Other payments.
+    if payment_method == "Wallet":
+        payment_status = "Success"
+    else:
+        simulate_result = body.get("simulate_result")
+
+        if simulate_result not in ALLOWED_PAYMENT_RESULTS:
+            return JsonResponse(
+                {
+                    "error": {
+                        "code": "INVALID_PAYMENT_RESULT",
+                        "message": (
+                            "simulate_result must be Pending, Success or Failed."
+                        ),
+                    }
+                },
+                status=400,
+            )
+
+        payment_status = simulate_result
 
     try:
         result = process_payment(
             reservation_id=reservation_id,
             phone_number=phone_number,
             payment_method=payment_method,
-            payment_status=simulate_result,
+            payment_status=payment_status,
         )
 
     except PaymentError as error:
@@ -194,7 +205,7 @@ def pay_for_reservation(request):
     if payment_status == "Pending":
         return JsonResponse(
             {
-                "message": ("Payment is pending. " "The reservation remains active."),
+                "message": "Payment is pending. The reservation remains active.",
                 **result,
             },
             status=202,
@@ -203,7 +214,7 @@ def pay_for_reservation(request):
     if payment_status == "Failed":
         return JsonResponse(
             {
-                "message": ("Payment failed. " "The reservation remains active."),
+                "message": "Payment failed. The reservation remains active.",
                 **result,
             },
             status=402,

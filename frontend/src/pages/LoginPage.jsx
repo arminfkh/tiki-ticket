@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, NavLink } from "react-router";
+import { consumeSessionExpiredNotice } from "../auth/storage.js";
 
 import {
   loginWithOtp,
@@ -25,6 +26,9 @@ export default function LoginPage() {
 
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionExpired] = useState(
+    () => consumeSessionExpiredNotice(),
+  );
 
   useEffect(() => {
     if (secondsRemaining <= 0) {
@@ -149,6 +153,15 @@ export default function LoginPage() {
         <p className="auth-description">
           Choose how you want to access your account.
         </p>
+        
+        {sessionExpired && (
+          <p
+            className="auth-session-notice"
+            role="status"
+          >
+            Your session has expired. Please log in again.
+          </p>
+        )}
 
         <div className="auth-tabs">
           <button

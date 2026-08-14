@@ -136,4 +136,79 @@ button {
   .user-label {
     display: none;
   }
+
+  .auth-card {
+    width: min(460px, 100%);
+    margin: 64px auto;
+    padding: 32px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #ffffff;
+  }
+  
+  .auth-card h1 {
+    margin: 6px 0 8px;
+  }
+  
+  .auth-description {
+    margin: 0 0 28px;
+    color: #6b7280;
+    line-height: 1.6;
+  }
+  
+  .auth-form {
+    display: grid;
+    gap: 20px;
+  }
+  
+  .form-group {
+    display: grid;
+    gap: 8px;
+  }
+  
+  .form-group label {
+    font-weight: 600;
+  }
+  
+  .form-group input {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111827;
+    outline: none;
+  }
+  
+  .form-group input:focus {
+    border-color: #111827;
+  }
+  
+  .form-error {
+    margin: 0;
+    color: #b91c1c;
+    line-height: 1.5;
+  }
+  
+  .auth-submit {
+    width: 100%;
+    border: 0;
+  }
+  
+  .auth-submit:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+  
+  .auth-footer {
+    margin: 24px 0 0;
+    text-align: center;
+    color: #6b7280;
+  }
+  
+  .auth-footer a {
+    color: #111827;
+    font-weight: 700;
+  }
 }

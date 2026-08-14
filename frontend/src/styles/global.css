@@ -34,6 +34,11 @@ button {
   cursor: pointer;
 }
 
+
+/* =========================
+   HEADER
+   ========================= */
+
 .site-header {
   min-height: 72px;
   display: flex;
@@ -70,6 +75,11 @@ button {
   color: #4b5563;
 }
 
+
+/* =========================
+   BUTTONS
+   ========================= */
+
 .button {
   display: inline-flex;
   align-items: center;
@@ -86,6 +96,11 @@ button {
   background: #ffffff;
   color: #111827;
 }
+
+
+/* =========================
+   GENERAL PAGES
+   ========================= */
 
 .page-container {
   width: min(1120px, 90vw);
@@ -117,6 +132,192 @@ button {
   text-transform: uppercase;
 }
 
+
+/* =========================
+   AUTH
+   ========================= */
+
+.auth-card {
+  width: min(460px, 100%);
+  margin: 64px auto;
+  padding: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.auth-card h1 {
+  margin: 6px 0 8px;
+}
+
+.auth-description {
+  margin: 0 0 28px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.auth-form {
+  display: grid;
+  gap: 20px;
+}
+
+
+/* =========================
+   FORM
+   ========================= */
+
+.form-group {
+  display: grid;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+}
+
+.form-group input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #111827;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.optional-label {
+  color: #6b7280;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+
+/* =========================
+   FORM ERRORS
+   ========================= */
+
+.form-error {
+  margin: 0;
+  color: #b91c1c;
+  line-height: 1.5;
+}
+
+.form-error p {
+  margin: 0;
+}
+
+.form-error ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+
+/* =========================
+   AUTH BUTTONS
+   ========================= */
+
+.auth-submit {
+  width: 100%;
+  border: 0;
+}
+
+.auth-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.auth-text-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #4b5563;
+  font-weight: 600;
+  text-align: center;
+}
+
+.auth-text-button:hover {
+  color: #111827;
+}
+
+
+/* =========================
+   AUTH FOOTER
+   ========================= */
+
+.auth-footer {
+  margin: 24px 0 0;
+  text-align: center;
+  color: #6b7280;
+}
+
+.auth-footer a {
+  color: #111827;
+  font-weight: 700;
+}
+
+
+/* =========================
+   OTP
+   ========================= */
+
+.otp-timer {
+  margin: -8px 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.auth-help {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+
+/* =========================
+   LOGIN METHOD TABS
+   ========================= */
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 24px;
+  padding: 4px;
+  border-radius: 10px;
+  background: #f3f4f6;
+}
+
+.auth-tab {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.auth-tab-active {
+  background: #ffffff;
+  color: #111827;
+}
+
+
+/* =========================
+   TABLET / SMALL DESKTOP
+   ========================= */
+
 @media (max-width: 800px) {
   .site-header {
     align-items: flex-start;
@@ -136,156 +337,25 @@ button {
   .user-label {
     display: none;
   }
+}
+
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 600px) {
+  .page-container {
+    width: min(100% - 32px, 1120px);
+    margin: 24px auto;
+  }
 
   .auth-card {
-    width: min(460px, 100%);
-    margin: 64px auto;
-    padding: 32px;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    background: #ffffff;
-  }
-  
-  .auth-card h1 {
-    margin: 6px 0 8px;
-  }
-  
-  .auth-description {
-    margin: 0 0 28px;
-    color: #6b7280;
-    line-height: 1.6;
-  }
-  
-  .auth-form {
-    display: grid;
-    gap: 20px;
-  }
-  
-  .form-group {
-    display: grid;
-    gap: 8px;
-  }
-  
-  .form-group label {
-    font-weight: 600;
-  }
-  
-  .form-group input {
-    width: 100%;
-    min-height: 44px;
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background: #ffffff;
-    color: #111827;
-    outline: none;
-  }
-  
-  .form-group input:focus {
-    border-color: #111827;
-  }
-  
-  .form-error {
-    margin: 0;
-    color: #b91c1c;
-    line-height: 1.5;
-  }
-  
-  .auth-submit {
-    width: 100%;
-    border: 0;
-  }
-  
-  .auth-submit:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
-  
-  .auth-footer {
-    margin: 24px 0 0;
-    text-align: center;
-    color: #6b7280;
-  }
-  
-  .auth-footer a {
-    color: #111827;
-    font-weight: 700;
+    margin: 24px auto;
+    padding: 24px;
   }
 
   .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  
-  .optional-label {
-    color: #6b7280;
-    font-size: 0.85rem;
-    font-weight: 400;
-  }
-  
-  .form-error p {
-    margin: 0;
-  }
-  
-  .form-error ul {
-    margin: 8px 0 0;
-    padding-left: 20px;
-  }
-  
-  @media (max-width: 600px) {
-    .form-row {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .otp-timer {
-    margin: -8px 0 0;
-    color: #6b7280;
-    font-size: 0.9rem;
-  }
-
-  .auth-tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    margin-bottom: 24px;
-    padding: 4px;
-    border-radius: 10px;
-    background: #f3f4f6;
-  }
-  
-  .auth-tab {
-    min-height: 40px;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: #6b7280;
-    font-weight: 600;
-  }
-  
-  .auth-tab-active {
-    background: #ffffff;
-    color: #111827;
-  }
-  
-  .auth-help {
-    margin: 0;
-    color: #6b7280;
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-  
-  .auth-text-button {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: #4b5563;
-    font-weight: 600;
-    text-align: center;
-  }
-  
-  .auth-text-button:hover {
-    color: #111827;
+    grid-template-columns: 1fr;
   }
 }

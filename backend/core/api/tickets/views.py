@@ -16,6 +16,11 @@ from .queries import get_ticket_details
 
 from elasticsearch import ApiError, TransportError
 
+from core.search.ticket_cache import (
+    TICKET_SEARCH_CACHE_PREFIX,
+    TICKET_SEARCH_CACHE_TTL_SECONDS,
+)
+
 ALLOWED_SPORTS = {
     "football",
     "volleyball",
@@ -34,9 +39,6 @@ ALLOWED_SORT_OPTIONS = {
     "price_asc",
     "price_desc",
 }
-
-TICKET_SEARCH_CACHE_PREFIX = "tickets:search:v2"
-TICKET_SEARCH_CACHE_TTL_SECONDS = 600
 
 
 def _error_response(

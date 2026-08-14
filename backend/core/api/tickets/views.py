@@ -10,7 +10,11 @@ from redis.exceptions import RedisError
 
 from core.common.redis_client import redis_client
 
-from .queries import search_available_tickets, get_ticket_details
+from core.search.ticket_search import search_available_tickets
+
+from .queries import get_ticket_details
+
+from elasticsearch import ApiError, TransportError
 
 ALLOWED_SPORTS = {
     "football",
@@ -31,7 +35,7 @@ ALLOWED_SORT_OPTIONS = {
     "price_desc",
 }
 
-TICKET_SEARCH_CACHE_PREFIX = "tickets:search:v1"
+TICKET_SEARCH_CACHE_PREFIX = "tickets:search:v2"
 TICKET_SEARCH_CACHE_TTL_SECONDS = 600
 
 
@@ -314,17 +318,30 @@ def search_tickets(request):
     tickets = _read_cache(cache_key)
 
     if tickets is None:
-        tickets = search_available_tickets(
-            sport=sport,
-            team=team,
-            city=city,
-            venue=venue,
-            ticket_class=ticket_class,
-            match_date=match_date,
-            min_price=min_price,
-            max_price=max_price,
-            sort=sort,
-        )
+        try:
+            tickets = search_available_tickets(
+                sport=sport,
+                team=team,
+                city=city,
+                venue=venue,
+                ticket_class=ticket_class,
+                match_date=match_date,
+                min_price=min_price,
+                max_price=max_price,
+                sort=sort,
+            )
+        except (ApiError, TransportError):
+            return JsonResponse(
+                {
+                    "error": {
+                        "code": "search_service_unavailable",
+                        "message": (
+                            "The ticket search service is temporarily unavailable."
+                        ),
+                    }
+                },
+                status=503,
+            )
 
         _write_cache(cache_key, tickets)
 

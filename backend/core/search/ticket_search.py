@@ -219,3 +219,106 @@ def search_available_tickets(
     )
 
     return [_deserialize_ticket(hit["_source"]) for hit in response["hits"]["hits"]]
+
+
+def get_ticket_filter_options(
+    *,
+    sport: str | None = None,
+    city: str | None = None,
+) -> dict:
+    """
+    Return dynamic filter options for the ticket search page.
+
+    Cities are limited to the selected sport and to matches
+    that are still in the future and have available tickets.
+
+    When a city is provided, only venues in that city are returned.
+    """
+    filters = [
+        {
+            "range": {
+                "remaining_capacity": {
+                    "gt": 0,
+                }
+            }
+        },
+        {
+            "range": {
+                "match_datetime": {
+                    "gt": "now",
+                }
+            }
+        },
+    ]
+
+    if sport is not None:
+        filters.append(
+            {
+                "term": {
+                    "sport": sport.casefold(),
+                }
+            }
+        )
+
+    aggregations = {
+        "cities": {
+            "terms": {
+                "field": "city",
+                "size": 100,
+                "order": {
+                    "_key": "asc",
+                },
+            }
+        }
+    }
+
+    if city is not None:
+        aggregations["venues_for_city"] = {
+            "filter": {
+                "term": {
+                    "city": city.casefold(),
+                }
+            },
+            "aggs": {
+                "venues": {
+                    "terms": {
+                        "field": "venue",
+                        "size": 100,
+                        "order": {
+                            "_key": "asc",
+                        },
+                    }
+                }
+            },
+        }
+
+    response = elasticsearch_client.search(
+        index=TICKET_INDEX,
+        query={
+            "bool": {
+                "filter": filters,
+            }
+        },
+        aggregations=aggregations,
+        size=0,
+    )
+
+    cities = [
+        bucket["key"].title()
+        for bucket in response["aggregations"]["cities"]["buckets"]
+    ]
+
+    venues = []
+
+    if city is not None:
+        venues = [
+            bucket["key"]
+            for bucket in (
+                response["aggregations"]["venues_for_city"]["venues"]["buckets"]
+            )
+        ]
+
+    return {
+        "cities": cities,
+        "venues": venues,
+    }

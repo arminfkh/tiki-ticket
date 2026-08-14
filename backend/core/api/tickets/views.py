@@ -10,7 +10,10 @@ from redis.exceptions import RedisError
 
 from core.common.redis_client import redis_client
 
-from core.search.ticket_search import search_available_tickets
+from core.search.ticket_search import (
+    get_ticket_filter_options,
+    search_available_tickets,
+)
 
 from .queries import get_ticket_details
 
@@ -353,6 +356,49 @@ def search_tickets(request):
             "tickets": tickets,
         }
     )
+
+
+@require_GET
+def ticket_filter_options(request):
+    """
+    Return dynamic city and venue options for ticket filters.
+    """
+    try:
+        sport = _get_text_parameter(request, "sport")
+        city = _get_text_parameter(request, "city")
+
+    except ValueError as exc:
+        return _error_response(
+            "invalid_parameter",
+            str(exc),
+        )
+
+    if sport is not None and sport.casefold() not in ALLOWED_SPORTS:
+        return _error_response(
+            "invalid_sport",
+            ("Sport must be Football, Volleyball, " "or Basketball."),
+        )
+
+    try:
+        options = get_ticket_filter_options(
+            sport=sport,
+            city=city,
+        )
+
+    except (ApiError, TransportError):
+        return JsonResponse(
+            {
+                "error": {
+                    "code": "search_service_unavailable",
+                    "message": (
+                        "The ticket search service is temporarily unavailable."
+                    ),
+                }
+            },
+            status=503,
+        )
+
+    return JsonResponse(options)
 
 
 # api 6

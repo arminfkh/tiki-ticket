@@ -36,13 +36,6 @@ def _substring_filter(
     field: str,
     value: str,
 ) -> dict:
-    """
-    Build a case-insensitive substring filter.
-
-    This mirrors the current PostgreSQL behavior:
-
-        ILIKE '%value%'
-    """
     return {
         "wildcard": {
             field: {
@@ -56,29 +49,19 @@ def _substring_filter(
 def _match_date_filter(
     match_date: date,
 ) -> dict:
-    """
-    Match every datetime occurring on one calendar date.
-    """
     next_date = match_date + timedelta(days=1)
-
-    start = f"{match_date.isoformat()}T00:00:00"
-    end = f"{next_date.isoformat()}T00:00:00"
 
     return {
         "range": {
             "match_datetime": {
-                "gte": start,
-                "lt": end,
+                "gte": f"{match_date.isoformat()}T00:00:00",
+                "lt": f"{next_date.isoformat()}T00:00:00",
             }
         }
     }
 
 
 def _deserialize_ticket(source: dict) -> dict:
-    """
-    Convert Elasticsearch values into a shape close to
-    the existing PostgreSQL API response.
-    """
     ticket = dict(source)
 
     if ticket.get("price") is not None:
@@ -100,20 +83,16 @@ def search_available_tickets(
     sort: str = "date_asc",
 ) -> list[dict]:
     """
-    Search available tickets using Elasticsearch.
+    Search future ticket documents in Elasticsearch.
 
-    PostgreSQL remains the source of truth, but ticket
-    discovery/search is performed against the Elasticsearch
-    tickets index.
+    We intentionally do NOT remove documents whose capacity
+    has reached zero here. PostgreSQL is used by the API view
+    to attach the live reservation/sold/selectable state.
+
+    This lets the frontend keep Reserved/Sold tickets visible
+    while disabling selection.
     """
     filters = [
-        {
-            "range": {
-                "remaining_capacity": {
-                    "gt": 0,
-                }
-            }
-        },
         {
             "range": {
                 "match_datetime": {
@@ -219,3 +198,98 @@ def search_available_tickets(
     )
 
     return [_deserialize_ticket(hit["_source"]) for hit in response["hits"]["hits"]]
+
+
+def get_ticket_filter_options(
+    *,
+    sport: str | None = None,
+    city: str | None = None,
+) -> dict:
+    """
+    Return City options and, when a city is selected,
+    Venue options for future matches.
+
+    These values come from Elasticsearch and are used by
+    the searchable City/Venue dropdowns in the frontend.
+    """
+    filters = [
+        {
+            "range": {
+                "match_datetime": {
+                    "gt": "now",
+                }
+            }
+        },
+    ]
+
+    if sport is not None:
+        filters.append(
+            {
+                "term": {
+                    "sport": sport.casefold(),
+                }
+            }
+        )
+
+    aggregations = {
+        "cities": {
+            "terms": {
+                "field": "city",
+                "size": 100,
+                "order": {
+                    "_key": "asc",
+                },
+            }
+        }
+    }
+
+    if city is not None:
+        aggregations["venues_for_city"] = {
+            "filter": {
+                "term": {
+                    "city": city.casefold(),
+                }
+            },
+            "aggs": {
+                "venues": {
+                    "terms": {
+                        "field": "venue",
+                        "size": 100,
+                        "order": {
+                            "_key": "asc",
+                        },
+                    }
+                }
+            },
+        }
+
+    response = elasticsearch_client.search(
+        index=TICKET_INDEX,
+        query={
+            "bool": {
+                "filter": filters,
+            }
+        },
+        aggregations=aggregations,
+        size=0,
+    )
+
+    cities = [
+        bucket["key"].title()
+        for bucket in (response["aggregations"]["cities"]["buckets"])
+    ]
+
+    venues = []
+
+    if city is not None:
+        venues = [
+            bucket["key"]
+            for bucket in (
+                response["aggregations"]["venues_for_city"]["venues"]["buckets"]
+            )
+        ]
+
+    return {
+        "cities": cities,
+        "venues": venues,
+    }

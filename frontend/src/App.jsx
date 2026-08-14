@@ -1,5 +1,3 @@
-import { Route, Routes } from "react-router";
-
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import MainLayout from "./layouts/MainLayout.jsx";
 
@@ -16,6 +14,7 @@ import BookingsPage from "./pages/BookingsPage.jsx";
 import ReportPage from "./pages/ReportPage.jsx";
 import SupportDashboardPage from "./pages/SupportDashboardPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import { Navigate, Route, Routes } from "react-router";
 
 export default function App() {
   return (
@@ -27,8 +26,17 @@ export default function App() {
         <Route path="signup" element={<SignupPage />} />
         <Route path="signup/verify" element={<SignupVerifyPage />} />
 
-        <Route path="tickets" element={<TicketsPage />} />
-        <Route path="tickets/:ticketId" element={<TicketDetailsPage />} />
+        <Route
+          path="tickets"
+          element={<Navigate to="/tickets/football" replace />}
+        />
+
+        <Route path="tickets/:sport" element={<TicketsPage />} />
+
+        <Route
+          path="tickets/:sport/:ticketId"
+          element={<TicketDetailsPage />}
+/>
 
         <Route element={<ProtectedRoute allowedRoles={["Spectator"]} />}>
           <Route path="reservations" element={<ReservationsPage />} />

@@ -8,6 +8,8 @@ from core.common.database import (
     fetch_one,
 )
 
+from core.search.ticket_sync import schedule_match_ticket_sync
+
 
 class PaymentError(Exception):
     """
@@ -229,6 +231,8 @@ def process_payment(
                 [match_id],
             )
 
+            schedule_match_ticket_sync(match_id)
+
             error_after_commit = PaymentError(
                 "RESERVATION_EXPIRED",
                 "The reservation expired before payment.",
@@ -253,6 +257,8 @@ def process_payment(
                 """,
                 [match_id],
             )
+
+            schedule_match_ticket_sync(match_id)
 
             error_after_commit = PaymentError(
                 "MATCH_STARTED",

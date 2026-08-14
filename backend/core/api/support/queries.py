@@ -12,6 +12,8 @@ from core.api.reservations.queries import (
     calculate_cancellation_penalty,
 )
 
+from core.search.ticket_sync import schedule_match_ticket_sync
+
 
 class SupportError(Exception):
     """
@@ -449,6 +451,8 @@ def cancel_reservation_by_support(
 
         if updated_count != len(match_tickets):
             raise RuntimeError("Not all ticket capacities were restored.")
+
+        schedule_match_ticket_sync(reservation["match_id"])
 
         return {
             "reservation": cancelled_reservation,

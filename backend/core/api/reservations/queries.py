@@ -13,6 +13,8 @@ from core.common.database import (
     fetch_value,
 )
 
+from core.search.ticket_sync import schedule_match_ticket_sync
+
 
 class ReservationError(Exception):
     """
@@ -299,6 +301,8 @@ def create_reservation(
         reservation["match_id"] = match_id
         reservation["remained_capacity"] = remaining_capacity - 1
 
+        schedule_match_ticket_sync(match_id)
+
         return reservation
 
 
@@ -335,6 +339,8 @@ def get_user_reservations(
                 match_id=match["match_id"],
                 phone_number=phone_number,
             )
+
+            schedule_match_ticket_sync(match["match_id"])
 
         reservations = fetch_all(
             """
@@ -734,6 +740,8 @@ def cancel_paid_reservation(
 
         if wallet is None:
             raise RuntimeError("The refund could not be added to the user's wallet.")
+
+        schedule_match_ticket_sync(match_id)
 
         return {
             "reservation": cancelled_reservation,

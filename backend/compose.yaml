@@ -15,8 +15,12 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: "5432"
+
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_TICKET_INDEX: tickets
 
     volumes:
       - .:/app
@@ -26,6 +30,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+
 
   db:
     image: postgres:17-alpine
@@ -43,10 +50,15 @@ services:
       - ../database/full_setup.sql:/docker-entrypoint-initdb.d/01_full_setup.sql:ro
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER} -d ${DB_NAME}"
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
+
 
   redis:
     image: redis:7-alpine
@@ -63,6 +75,34 @@ services:
       timeout: 5s
       retries: 10
 
+
+  elasticsearch:
+    image: elasticsearch:9.5.1
+
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+    ports:
+      - "9200:9200"
+
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --fail http://localhost:9200/_cluster/health || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+
 volumes:
   postgres_data:
   redis_data:
+  elasticsearch_data:

@@ -10,26 +10,48 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
+
 from dotenv import load_dotenv
+
+# =========================================================
+# Environment
+# =========================================================
 
 load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+# =========================================================
+# Base directory
+# =========================================================
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# =========================================================
+# Django core settings
+# =========================================================
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = []
+DEBUG = (
+    os.getenv(
+        "DEBUG",
+        "False",
+    ).lower()
+    == "true"
+)
+
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+]
 
 
+# =========================================================
 # Application definition
+# =========================================================
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -41,6 +63,7 @@ INSTALLED_APPS = [
     "core",
 ]
 
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -51,7 +74,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
 ROOT_URLCONF = "config.urls"
+
 
 TEMPLATES = [
     {
@@ -68,11 +93,13 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = "config.wsgi.application"
 
 
+# =========================================================
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# =========================================================
 
 DATABASES = {
     "default": {
@@ -80,33 +107,44 @@ DATABASES = {
         "NAME": os.getenv("DB_NAME"),
         "USER": os.getenv("DB_USER"),
         "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST", "localhost"),
-        "PORT": os.getenv("DB_PORT", "5432"),
+        "HOST": os.getenv(
+            "DB_HOST",
+            "localhost",
+        ),
+        "PORT": os.getenv(
+            "DB_PORT",
+            "5432",
+        ),
     }
 }
 
 
+# =========================================================
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+# =========================================================
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "UserAttributeSimilarityValidator"
+        ),
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": ("django.contrib.auth.password_validation." "MinimumLengthValidator"),
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": ("django.contrib.auth.password_validation." "CommonPasswordValidator"),
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": ("django.contrib.auth.password_validation." "NumericPasswordValidator"),
     },
 ]
 
 
+# =========================================================
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+# =========================================================
 
 LANGUAGE_CODE = "en-us"
 
@@ -117,27 +155,87 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# =========================================================
+# Static files
+# =========================================================
 
 STATIC_URL = "static/"
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+# =========================================================
+# Default primary key field
+# =========================================================
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Redis
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
-REDIS_DB = int(os.getenv("REDIS_DB", "0"))
 
+# =========================================================
+# Redis
+# =========================================================
+
+REDIS_HOST = os.getenv(
+    "REDIS_HOST",
+    "localhost",
+)
+
+REDIS_PORT = int(
+    os.getenv(
+        "REDIS_PORT",
+        "6379",
+    )
+)
+
+REDIS_DB = int(
+    os.getenv(
+        "REDIS_DB",
+        "0",
+    )
+)
+
+
+# =========================================================
+# Elasticsearch
+# =========================================================
+
+ELASTICSEARCH_URL = os.getenv(
+    "ELASTICSEARCH_URL",
+    "http://localhost:9200",
+)
+
+ELASTICSEARCH_TICKET_INDEX = os.getenv(
+    "ELASTICSEARCH_TICKET_INDEX",
+    "tickets",
+)
+
+
+# =========================================================
 # Email
+# =========================================================
+
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.getenv("EMAIL_HOST", "")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+
+EMAIL_HOST = os.getenv(
+    "EMAIL_HOST",
+    "",
+)
+
+EMAIL_PORT = int(
+    os.getenv(
+        "EMAIL_PORT",
+        "587",
+    )
+)
+
+EMAIL_HOST_USER = os.getenv(
+    "EMAIL_HOST_USER",
+    "",
+)
+
+EMAIL_HOST_PASSWORD = os.getenv(
+    "EMAIL_HOST_PASSWORD",
+    "",
+)
+
 EMAIL_USE_TLS = (
     os.getenv(
         "EMAIL_USE_TLS",
@@ -145,12 +243,17 @@ EMAIL_USE_TLS = (
     ).lower()
     == "true"
 )
+
 DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL",
     EMAIL_HOST_USER,
 )
 
+
+# =========================================================
 # JWT
+# =========================================================
+
 JWT_SECRET_KEY = os.getenv(
     "JWT_SECRET_KEY",
     SECRET_KEY,
@@ -158,11 +261,49 @@ JWT_SECRET_KEY = os.getenv(
 
 JWT_ALGORITHM = "HS256"
 
-JWT_ACCESS_TOKEN_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_MINUTES", "60"))
+JWT_ACCESS_TOKEN_MINUTES = int(
+    os.getenv(
+        "JWT_ACCESS_TOKEN_MINUTES",
+        "60",
+    )
+)
 
+
+# =========================================================
 # OTP
-OTP_LENGTH = int(os.getenv("OTP_LENGTH", "6"))
-OTP_TTL_SECONDS = int(os.getenv("OTP_TTL_SECONDS", "120"))
-OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv("OTP_RESEND_COOLDOWN_SECONDS", "60"))
-OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "5"))
-PENDING_SIGNUP_TTL_SECONDS = int(os.getenv("PENDING_SIGNUP_TTL_SECONDS", "600"))
+# =========================================================
+
+OTP_LENGTH = int(
+    os.getenv(
+        "OTP_LENGTH",
+        "6",
+    )
+)
+
+OTP_TTL_SECONDS = int(
+    os.getenv(
+        "OTP_TTL_SECONDS",
+        "120",
+    )
+)
+
+OTP_RESEND_COOLDOWN_SECONDS = int(
+    os.getenv(
+        "OTP_RESEND_COOLDOWN_SECONDS",
+        "60",
+    )
+)
+
+OTP_MAX_ATTEMPTS = int(
+    os.getenv(
+        "OTP_MAX_ATTEMPTS",
+        "5",
+    )
+)
+
+PENDING_SIGNUP_TTL_SECONDS = int(
+    os.getenv(
+        "PENDING_SIGNUP_TTL_SECONDS",
+        "600",
+    )
+)

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate, NavLink } from "react-router";
 
 import {
   loginWithOtp,
@@ -133,6 +133,15 @@ export default function LoginPage() {
   return (
     <main className="page-container">
       <section className="auth-card">
+        <NavLink
+          className="tiki-logo auth-logo"
+          to="/"
+          aria-label="TikiTicket home"
+        >
+          <span className="tiki-logo-first">Tiki</span>
+          <span className="tiki-logo-second">Ticket</span>
+        </NavLink>
+
         <p className="eyebrow">Account</p>
 
         <h1>Log in</h1>

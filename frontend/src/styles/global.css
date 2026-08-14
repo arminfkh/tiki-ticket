@@ -93,13 +93,6 @@ button {
   border-bottom: 1px solid var(--border);
 }
 
-.brand {
-  color: var(--text);
-
-  font-weight: 800;
-  white-space: nowrap;
-}
-
 .main-nav {
   display: flex;
   align-items: center;
@@ -926,4 +919,182 @@ button {
   .support-record-actions .button {
     width: 100%;
   }
+}
+
+/* =========================
+   HOME
+   ========================= */
+
+.home-page {
+  display: grid;
+  gap: 32px;
+}
+
+.home-hero {
+  padding: 48px;
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+
+  background: var(--surface);
+}
+
+.home-hero h1 {
+  max-width: 720px;
+
+  margin: 8px 0 14px;
+
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  line-height: 1.05;
+}
+
+.home-hero > p:not(.eyebrow) {
+  max-width: 650px;
+
+  margin: 0;
+
+  color: var(--text-muted);
+
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 12px;
+
+  margin-top: 28px;
+}
+
+.home-grid {
+  display: grid;
+
+  grid-template-columns: repeat(4, 1fr);
+
+  gap: 16px;
+}
+
+.home-public-hero + .home-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.home-card {
+  display: flex;
+  flex-direction: column;
+
+  min-height: 210px;
+
+  padding: 24px;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+
+  background: var(--surface);
+}
+
+.home-card h2 {
+  margin: 10px 0 8px;
+
+  font-size: 1.1rem;
+}
+
+.home-card p {
+  margin: 0;
+
+  color: var(--text-muted);
+
+  line-height: 1.6;
+}
+
+.home-card-number {
+  color: var(--primary);
+
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.home-card-link {
+  margin-top: auto;
+  padding-top: 24px;
+
+  color: var(--primary);
+
+  font-weight: 700;
+}
+
+.home-card-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .home-grid,
+  .home-public-hero + .home-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .home-hero {
+    padding: 28px 24px;
+  }
+
+  .home-grid,
+  .home-public-hero + .home-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   TIKITICKET LOGO
+   ========================= */
+
+.tiki-logo {
+  display: inline-flex;
+  align-items: center;
+    
+  text-decoration: none;
+    
+  font-family:
+  "Arial Narrow",
+  "Roboto Condensed",
+  "Inter Tight",
+  Arial,
+  sans-serif;
+    
+  font-size: 1.55rem;
+  font-weight: 900;
+  font-style: italic;
+    
+  letter-spacing: -0.06em;
+  line-height: 1;
+    
+  transition:
+  transform 0.18s ease,
+  filter 0.18s ease;
+}
+  
+.tiki-logo-first {
+  color: var(--text);
+}
+  
+.tiki-logo-second {
+  margin-left: 3px;
+  color: var(--primary);
+    
+  transition:
+  color 0.18s ease,
+  text-shadow 0.18s ease;
+}
+
+.auth-logo {
+  display: flex;
+  justify-content: center;
+
+  width: fit-content;
+
+  margin: 0 auto 28px;
+
+  font-size: 2rem;
 }

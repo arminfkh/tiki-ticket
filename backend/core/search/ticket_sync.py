@@ -55,13 +55,12 @@ def get_match_tickets_for_indexing(
 def build_ticket_document(
     ticket: dict,
 ) -> dict:
-    """
-    Convert a PostgreSQL ticket row into an
-    Elasticsearch-compatible document.
-    """
     return {
         "id": ticket["id"],
         "match_id": ticket["match_id"],
+        "seat_number": ticket["seat_number"],
+        "seat_row": ticket["seat_row"],
+        "seat_section": ticket["seat_section"],
         "ticket_class": ticket["ticket_class"],
         "price": float(ticket["price"]),
         "remaining_capacity": ticket["remaining_capacity"],

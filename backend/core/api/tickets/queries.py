@@ -11,6 +11,9 @@ BASE_TICKET_SEARCH_SQL = """
     SELECT
         t.TicketID AS id,
         t.MatchID AS match_id,
+        t.SeatNumber AS seat_number,
+        t.SeatRow AS seat_row,
+        t.SeatSection AS seat_section,
         t.TicketClass AS ticket_class,
         t.TicketPrice AS price,
         t.RemainedCapacity AS remaining_capacity,

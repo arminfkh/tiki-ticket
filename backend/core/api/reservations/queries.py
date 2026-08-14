@@ -290,7 +290,16 @@ def create_reservation(
                 ReservationPhoneNum AS phone_number,
                 ReservationDateTime AS reserved_at,
                 ReservationExpireDatetime AS expires_at,
-                ReservationStatus AS status;
+                ReservationStatus AS status,
+                GREATEST(
+                    EXTRACT(
+                        EPOCH FROM (
+                            ReservationExpireDatetime
+                            - CURRENT_TIMESTAMP
+                        )
+                    )::INT,
+                    0
+                ) AS remaining_seconds;
             """,
             [ticket_id, phone_number],
         )

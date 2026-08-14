@@ -11,12 +11,13 @@ export function payForReservation({
   };
 
   if (paymentMethod !== "Wallet") {
-    body.simulate_result = simulateResult;
+    body.simulate_result =
+      simulateResult || "Success";
   }
 
   return apiRequest("/payments/", {
     method: "POST",
-    body,
     authenticated: true,
+    body,
   });
 }

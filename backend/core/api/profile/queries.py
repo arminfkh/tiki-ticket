@@ -1,4 +1,7 @@
-from core.common.database import execute_returning, fetch_one
+from core.common.database import (
+    execute_returning,
+    fetch_one,
+)
 
 GET_PROFILE_SQL = """
     SELECT
@@ -9,7 +12,8 @@ GET_PROFILE_SQL = """
         ResidenceCity AS residence_city,
         SignUpDate AS signup_date,
         AccountStatus AS account_status,
-        UserRole AS role
+        UserRole AS role,
+        WalletBalance AS wallet_balance
     FROM Users
     WHERE PhoneNumber = %s;
 """
@@ -19,7 +23,7 @@ def get_profile(
     phone_number: str,
 ) -> dict | None:
     """
-    Find one user profile.
+    Find one user profile, including wallet balance.
     """
     return fetch_one(
         GET_PROFILE_SQL,
@@ -34,6 +38,10 @@ def update_profile(
 ) -> dict | None:
     """
     Update only the profile fields supplied by the user.
+
+    WalletBalance is intentionally not updateable through
+    the profile API. Wallet mutations must happen through
+    payment/refund business logic.
     """
     column_map = {
         "email": "Email",
@@ -45,10 +53,14 @@ def update_profile(
     assignments = []
     params = []
 
-    for field_name, value in changes.items():
+    for (
+        field_name,
+        value,
+    ) in changes.items():
         column_name = column_map[field_name]
 
         assignments.append(f"{column_name} = %s")
+
         params.append(value)
 
     params.append(phone_number)
@@ -65,7 +77,11 @@ def update_profile(
             ResidenceCity AS residence_city,
             SignUpDate AS signup_date,
             AccountStatus AS account_status,
-            UserRole AS role;
+            UserRole AS role,
+            WalletBalance AS wallet_balance;
     """
 
-    return execute_returning(query, params)
+    return execute_returning(
+        query,
+        params,
+    )

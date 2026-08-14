@@ -1,20 +1,39 @@
 import json
 
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
-from django.db import IntegrityError
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from redis.exceptions import RedisError
+from django.core.exceptions import (
+    ValidationError,
+)
+from django.core.validators import (
+    validate_email,
+)
+from django.db import (
+    IntegrityError,
+)
+from django.http import (
+    JsonResponse,
+)
+from django.views.decorators.csrf import (
+    csrf_exempt,
+)
+from django.views.decorators.http import (
+    require_http_methods,
+)
+from redis.exceptions import (
+    RedisError,
+)
 
 from core.common.authentication import (
     InvalidAccessToken,
     get_authenticated_payload,
 )
-from core.common.redis_client import redis_client
+from core.common.redis_client import (
+    redis_client,
+)
 
-from .queries import get_profile, update_profile
+from .queries import (
+    get_profile,
+    update_profile,
+)
 
 PROFILE_CACHE_TTL_SECONDS = 600
 
@@ -39,12 +58,17 @@ def _error_response(
 def _profile_cache_key(
     phone_number: str,
 ) -> str:
-    return f"profile:user:{phone_number}"
+    return f"profile:user:" f"{phone_number}"
 
 
-def _cache_profile(profile: dict) -> None:
+def _cache_profile(
+    profile: dict,
+) -> None:
     """
-    Store the updated profile in Redis.
+    Store an updated profile in Redis.
+
+    GET requests intentionally read PostgreSQL directly so
+    WalletBalance always reflects payment/refund changes.
     """
     try:
         redis_client.setex(
@@ -60,22 +84,101 @@ def _cache_profile(profile: dict) -> None:
         pass
 
 
-@csrf_exempt
-@require_http_methods(["PATCH"])
-def update_user_profile(request):
-    """
-    Update the authenticated user's profile.
-    """
+def _authenticate(
+    request,
+):
     try:
         payload = get_authenticated_payload(request)
     except InvalidAccessToken as exc:
-        return _error_response(
-            "invalid_access_token",
-            str(exc),
-            status=401,
+        return (
+            None,
+            _error_response(
+                "invalid_access_token",
+                str(exc),
+                status=401,
+            ),
         )
 
-    phone_number = payload["sub"]
+    return (
+        payload["sub"],
+        None,
+    )
+
+
+def _get_current_profile(
+    phone_number: str,
+):
+    profile = get_profile(phone_number)
+
+    if profile is None:
+        return (
+            None,
+            _error_response(
+                "user_not_found",
+                ("The authenticated user " "no longer exists."),
+                status=404,
+            ),
+        )
+
+    if profile["account_status"] != "Active":
+        return (
+            None,
+            _error_response(
+                "account_inactive",
+                ("This user account " "is not active."),
+                status=403,
+            ),
+        )
+
+    return (
+        profile,
+        None,
+    )
+
+
+@csrf_exempt
+@require_http_methods(
+    [
+        "GET",
+        "PATCH",
+    ]
+)
+def update_user_profile(
+    request,
+):
+    """
+    GET /api/profile/
+        Return the authenticated user's profile and wallet balance.
+
+    PATCH /api/profile/
+        Update editable profile fields.
+
+    The function name is kept unchanged so the existing urls.py
+    does not need to be modified.
+    """
+    (
+        phone_number,
+        auth_error,
+    ) = _authenticate(request)
+
+    if auth_error:
+        return auth_error
+
+    if request.method == "GET":
+        (
+            profile,
+            profile_error,
+        ) = _get_current_profile(phone_number)
+
+        if profile_error:
+            return profile_error
+
+        return JsonResponse(
+            {
+                "profile": profile,
+            },
+            status=200,
+        )
 
     try:
         data = json.loads(request.body)
@@ -85,13 +188,16 @@ def update_user_profile(request):
     ):
         return _error_response(
             "invalid_json",
-            "The request body must contain valid JSON.",
+            ("The request body must " "contain valid JSON."),
         )
 
-    if not isinstance(data, dict):
+    if not isinstance(
+        data,
+        dict,
+    ):
         return _error_response(
             "invalid_json",
-            "The JSON request body must be an object.",
+            ("The JSON request body " "must be an object."),
         )
 
     allowed_fields = {
@@ -106,24 +212,30 @@ def update_user_profile(request):
     if unknown_fields:
         return _error_response(
             "unsupported_fields",
-            ("These fields cannot be updated: " + ", ".join(sorted(unknown_fields))),
+            ("These fields cannot be " "updated: " + ", ".join(sorted(unknown_fields))),
         )
 
     if not data:
         return _error_response(
             "no_changes",
-            "At least one profile field is required.",
+            ("At least one profile " "field is required."),
         )
 
     changes = {}
 
-    for field_name, value in data.items():
+    for (
+        field_name,
+        value,
+    ) in data.items():
         if field_name == "residence_city":
             if value is not None:
-                if not isinstance(value, str):
+                if not isinstance(
+                    value,
+                    str,
+                ):
                     return _error_response(
                         "invalid_residence_city",
-                        ("The residence_city field " "must be text or null."),
+                        ("The residence_city " "field must be text " "or null."),
                     )
 
                 value = value.strip() or None
@@ -131,16 +243,20 @@ def update_user_profile(request):
                 if value is not None and len(value) > 100:
                     return _error_response(
                         "invalid_residence_city",
-                        ("The residence city cannot " "exceed 100 characters."),
+                        ("The residence city " "cannot exceed " "100 characters."),
                     )
 
             changes[field_name] = value
+
             continue
 
-        if not isinstance(value, str):
+        if not isinstance(
+            value,
+            str,
+        ):
             return _error_response(
                 f"invalid_{field_name}",
-                f"The {field_name} field must be text.",
+                (f"The {field_name} " "field must be text."),
             )
 
         value = value.strip()
@@ -148,7 +264,7 @@ def update_user_profile(request):
         if not value:
             return _error_response(
                 f"invalid_{field_name}",
-                f"The {field_name} field cannot be empty.",
+                (f"The {field_name} " "field cannot be empty."),
             )
 
         changes[field_name] = value
@@ -161,7 +277,7 @@ def update_user_profile(request):
         if len(email) > 255:
             return _error_response(
                 "invalid_email",
-                "The email address is too long.",
+                ("The email address " "is too long."),
             )
 
         try:
@@ -169,7 +285,7 @@ def update_user_profile(request):
         except ValidationError:
             return _error_response(
                 "invalid_email",
-                "Enter a valid email address.",
+                ("Enter a valid " "email address."),
             )
 
         changes["email"] = email
@@ -179,7 +295,7 @@ def update_user_profile(request):
     if first_name is not None and len(first_name) > 50:
         return _error_response(
             "invalid_first_name",
-            ("The first name cannot exceed " "50 characters."),
+            ("The first name cannot " "exceed 50 characters."),
         )
 
     last_name = changes.get("last_name")
@@ -187,24 +303,16 @@ def update_user_profile(request):
     if last_name is not None and len(last_name) > 50:
         return _error_response(
             "invalid_last_name",
-            ("The last name cannot exceed " "50 characters."),
+            ("The last name cannot " "exceed 50 characters."),
         )
 
-    existing_profile = get_profile(phone_number)
+    (
+        existing_profile,
+        profile_error,
+    ) = _get_current_profile(phone_number)
 
-    if existing_profile is None:
-        return _error_response(
-            "user_not_found",
-            "The authenticated user no longer exists.",
-            status=404,
-        )
-
-    if existing_profile["account_status"] != "Active":
-        return _error_response(
-            "account_inactive",
-            "This user account is not active.",
-            status=403,
-        )
+    if profile_error:
+        return profile_error
 
     try:
         profile = update_profile(
@@ -214,14 +322,14 @@ def update_user_profile(request):
     except IntegrityError:
         return _error_response(
             "email_exists",
-            ("Another account already uses " "this email address."),
+            ("Another account already " "uses this email address."),
             status=409,
         )
 
     if profile is None:
         return _error_response(
             "profile_update_failed",
-            "The profile could not be updated.",
+            ("The profile could not " "be updated."),
             status=500,
         )
 
@@ -229,7 +337,7 @@ def update_user_profile(request):
 
     return JsonResponse(
         {
-            "message": "Profile updated successfully.",
+            "message": ("Profile updated " "successfully."),
             "profile": profile,
         },
         status=200,

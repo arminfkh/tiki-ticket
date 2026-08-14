@@ -32,3 +32,26 @@ export function searchTickets(filters = {}, { signal } = {}) {
 export function getTicketDetails(ticketId, { signal } = {}) {
   return apiRequest(`/tickets/${ticketId}/`, { signal });
 }
+
+export function getTicketFilterOptions(
+  filters = {},
+  { signal } = {},
+) {
+  const params = new URLSearchParams();
+
+  if (filters.sport) {
+    params.set("sport", filters.sport);
+  }
+
+  if (filters.city) {
+    params.set("city", filters.city);
+  }
+
+  const queryString = params.toString();
+
+  const endpoint = queryString
+    ? `/tickets/filter-options/?${queryString}`
+    : "/tickets/filter-options/";
+
+  return apiRequest(endpoint, { signal });
+}

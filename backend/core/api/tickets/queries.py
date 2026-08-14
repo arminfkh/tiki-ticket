@@ -2,15 +2,19 @@ import json
 from datetime import date
 from decimal import Decimal
 
-from core.common.database import fetch_all
-from core.common.database import fetch_one
+from core.common.database import (
+    fetch_all,
+    fetch_one,
+)
 
-# api 5
-
+# Used by Elasticsearch indexing/synchronization.
 BASE_TICKET_SEARCH_SQL = """
     SELECT
         t.TicketID AS id,
         t.MatchID AS match_id,
+        t.SeatNumber AS seat_number,
+        t.SeatRow AS seat_row,
+        t.SeatSection AS seat_section,
         t.TicketClass AS ticket_class,
         t.TicketPrice AS price,
         t.RemainedCapacity AS remaining_capacity,
@@ -72,10 +76,11 @@ def search_available_tickets(
     sort: str = "date_asc",
 ) -> list[dict]:
     """
-    Search available tickets using optional filters.
+    PostgreSQL implementation retained for compatibility/tests.
+
+    The public search API currently uses Elasticsearch.
     """
     conditions = [
-        "t.RemainedCapacity > 0",
         "m.MatchDatetime > CURRENT_TIMESTAMP",
     ]
 
@@ -127,6 +132,7 @@ def search_available_tickets(
         params.append(max_price)
 
     where_clause = " AND ".join(conditions)
+
     order_by_clause = SORT_OPTIONS[sort]
 
     query = f"""
@@ -137,10 +143,128 @@ def search_available_tickets(
         ORDER BY {order_by_clause};
     """
 
-    return fetch_all(query, params)
+    return fetch_all(
+        query,
+        params,
+    )
 
 
-# api 6
+def get_ticket_availability_states(
+    ticket_ids: list[int],
+) -> dict[int, dict]:
+    """
+    Read live reservation/availability state from PostgreSQL.
+
+    Capacity is shared across every Ticket row of one Match.
+    Expired Reserved rows are treated as released immediately,
+    even before another reservation endpoint physically updates
+    their status/capacity.
+    """
+    if not ticket_ids:
+        return {}
+
+    rows = fetch_all(
+        """
+        SELECT
+            t.TicketID AS id,
+
+            (
+                t.RemainedCapacity
+                + COALESCE(
+                    expired_capacity.expired_count,
+                    0
+                )
+            ) AS remaining_capacity,
+
+            active_reservation.status
+                AS reservation_status,
+
+            active_reservation.expires_at
+                AS reservation_expires_at,
+
+            CASE
+                WHEN active_reservation.status = 'Paid'
+                    THEN 'Sold'
+                WHEN active_reservation.status = 'Reserved'
+                    THEN 'Reserved'
+                WHEN (
+                    t.RemainedCapacity
+                    + COALESCE(
+                        expired_capacity.expired_count,
+                        0
+                    )
+                ) <= 0
+                    THEN 'Sold out'
+                ELSE 'Available'
+            END AS availability_status,
+
+            (
+                active_reservation.status IS NULL
+                AND (
+                    t.RemainedCapacity
+                    + COALESCE(
+                        expired_capacity.expired_count,
+                        0
+                    )
+                ) > 0
+                AND m.MatchDatetime
+                    > CURRENT_TIMESTAMP
+            ) AS is_selectable
+
+        FROM Ticket AS t
+
+        JOIN Matches AS m
+            ON m.MatchID = t.MatchID
+
+        LEFT JOIN LATERAL (
+            SELECT
+                COUNT(*)::INT AS expired_count
+            FROM Reservation AS expired_r
+            JOIN Ticket AS expired_t
+                ON expired_t.TicketID
+                    = expired_r.TicketID
+            WHERE expired_t.MatchID
+                    = t.MatchID
+              AND expired_r.ReservationStatus
+                    = 'Reserved'
+              AND expired_r.ReservationExpireDatetime
+                    <= CURRENT_TIMESTAMP
+        ) AS expired_capacity
+            ON TRUE
+
+        LEFT JOIN LATERAL (
+            SELECT
+                r.ReservationStatus
+                    AS status,
+                r.ReservationExpireDatetime
+                    AS expires_at
+            FROM Reservation AS r
+            WHERE r.TicketID
+                    = t.TicketID
+              AND (
+                    r.ReservationStatus
+                        = 'Paid'
+                    OR (
+                        r.ReservationStatus
+                            = 'Reserved'
+                        AND r.ReservationExpireDatetime
+                            > CURRENT_TIMESTAMP
+                    )
+              )
+            ORDER BY
+                r.ReservationDateTime DESC,
+                r.ReservationID DESC
+            LIMIT 1
+        ) AS active_reservation
+            ON TRUE
+
+        WHERE t.TicketID = ANY(%s);
+        """,
+        [ticket_ids],
+    )
+
+    return {row["id"]: row for row in rows}
+
 
 GET_TICKET_DETAILS_SQL = """
     SELECT
@@ -151,8 +275,15 @@ GET_TICKET_DETAILS_SQL = """
         t.SeatSection AS seat_section,
         t.TicketClass AS ticket_class,
         t.TicketPrice AS price,
-        t.RemainedCapacity AS remaining_capacity,
         t.Facilities AS facilities,
+
+        (
+            t.RemainedCapacity
+            + COALESCE(
+                expired_capacity.expired_count,
+                0
+            )
+        ) AS remaining_capacity,
 
         m.SportType AS sport,
         m.HomeTeam AS home_team,
@@ -165,10 +296,53 @@ GET_TICKET_DETAILS_SQL = """
         v.VenueCity AS city,
         v.Capacity AS venue_capacity,
 
+        active_reservation.status
+            AS reservation_status,
+
+        active_reservation.expires_at
+            AS reservation_expires_at,
+
+        CASE
+            WHEN active_reservation.status = 'Paid'
+                THEN 'Sold'
+            WHEN active_reservation.status = 'Reserved'
+                THEN 'Reserved'
+            WHEN (
+                t.RemainedCapacity
+                + COALESCE(
+                    expired_capacity.expired_count,
+                    0
+                )
+            ) <= 0
+                THEN 'Sold out'
+            ELSE 'Available'
+        END AS availability_status,
+
         (
-            t.RemainedCapacity > 0
-            AND m.MatchDatetime > CURRENT_TIMESTAMP
-        ) AS is_available
+            active_reservation.status IS NULL
+            AND (
+                t.RemainedCapacity
+                + COALESCE(
+                    expired_capacity.expired_count,
+                    0
+                )
+            ) > 0
+            AND m.MatchDatetime
+                > CURRENT_TIMESTAMP
+        ) AS is_available,
+
+        (
+            active_reservation.status IS NULL
+            AND (
+                t.RemainedCapacity
+                + COALESCE(
+                    expired_capacity.expired_count,
+                    0
+                )
+            ) > 0
+            AND m.MatchDatetime
+                > CURRENT_TIMESTAMP
+        ) AS is_selectable
 
     FROM Ticket AS t
 
@@ -178,16 +352,55 @@ GET_TICKET_DETAILS_SQL = """
     JOIN Venue AS v
         ON v.VenueID = m.VenueID
 
+    LEFT JOIN LATERAL (
+        SELECT
+            COUNT(*)::INT AS expired_count
+        FROM Reservation AS expired_r
+        JOIN Ticket AS expired_t
+            ON expired_t.TicketID
+                = expired_r.TicketID
+        WHERE expired_t.MatchID
+                = t.MatchID
+          AND expired_r.ReservationStatus
+                = 'Reserved'
+          AND expired_r.ReservationExpireDatetime
+                <= CURRENT_TIMESTAMP
+    ) AS expired_capacity
+        ON TRUE
+
+    LEFT JOIN LATERAL (
+        SELECT
+            r.ReservationStatus
+                AS status,
+            r.ReservationExpireDatetime
+                AS expires_at
+        FROM Reservation AS r
+        WHERE r.TicketID
+                = t.TicketID
+          AND (
+                r.ReservationStatus
+                    = 'Paid'
+                OR (
+                    r.ReservationStatus
+                        = 'Reserved'
+                    AND r.ReservationExpireDatetime
+                        > CURRENT_TIMESTAMP
+                )
+          )
+        ORDER BY
+            r.ReservationDateTime DESC,
+            r.ReservationID DESC
+        LIMIT 1
+    ) AS active_reservation
+        ON TRUE
+
     WHERE t.TicketID = %s;
 """
 
 
-def get_ticket_details(ticket_id: int) -> dict | None:
-    """
-    Return the complete information for one ticket.
-
-    Return None when the ticket does not exist.
-    """
+def get_ticket_details(
+    ticket_id: int,
+) -> dict | None:
     ticket = fetch_one(
         GET_TICKET_DETAILS_SQL,
         [ticket_id],
@@ -198,7 +411,10 @@ def get_ticket_details(ticket_id: int) -> dict | None:
 
     facilities = ticket.get("facilities")
 
-    if isinstance(facilities, str):
+    if isinstance(
+        facilities,
+        str,
+    ):
         try:
             ticket["facilities"] = json.loads(facilities)
         except json.JSONDecodeError:

@@ -3,11 +3,16 @@ import logging
 
 from django.db import DatabaseError
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import (
+    csrf_exempt,
+)
 
 from core.common.authentication import (
     InvalidAccessToken,
     get_authenticated_payload,
+)
+from core.search.ticket_cache import (
+    invalidate_ticket_search_cache,
 )
 
 from .queries import (
@@ -40,19 +45,15 @@ ERROR_STATUS_CODES = {
 
 
 @csrf_exempt
-def reserve_ticket(request):
-    """
-    POST /api/reservations/
-
-    Create a ten-minute ticket reservation for the authenticated user.
-    """
-
+def reserve_ticket(
+    request,
+):
     if request.method != "POST":
         return JsonResponse(
             {
                 "error": {
                     "code": "METHOD_NOT_ALLOWED",
-                    "message": "Only POST requests are allowed.",
+                    "message": ("Only POST requests " "are allowed."),
                 }
             },
             status=405,
@@ -75,23 +76,29 @@ def reserve_ticket(request):
 
     try:
         body = json.loads(request.body)
-    except (json.JSONDecodeError, UnicodeDecodeError):
+    except (
+        json.JSONDecodeError,
+        UnicodeDecodeError,
+    ):
         return JsonResponse(
             {
                 "error": {
                     "code": "INVALID_JSON",
-                    "message": "The request body must contain valid JSON.",
+                    "message": ("The request body must " "contain valid JSON."),
                 }
             },
             status=400,
         )
 
-    if not isinstance(body, dict):
+    if not isinstance(
+        body,
+        dict,
+    ):
         return JsonResponse(
             {
                 "error": {
                     "code": "INVALID_BODY",
-                    "message": "The JSON body must be an object.",
+                    "message": ("The JSON body must " "be an object."),
                 }
             },
             status=400,
@@ -99,12 +106,22 @@ def reserve_ticket(request):
 
     ticket_id = body.get("ticket_id")
 
-    if not isinstance(ticket_id, int) or isinstance(ticket_id, bool) or ticket_id <= 0:
+    if (
+        not isinstance(
+            ticket_id,
+            int,
+        )
+        or isinstance(
+            ticket_id,
+            bool,
+        )
+        or ticket_id <= 0
+    ):
         return JsonResponse(
             {
                 "error": {
                     "code": "INVALID_TICKET_ID",
-                    "message": "ticket_id must be a positive integer.",
+                    "message": ("ticket_id must be " "a positive integer."),
                 }
             },
             status=400,
@@ -123,17 +140,21 @@ def reserve_ticket(request):
                     "message": error.message,
                 }
             },
-            status=ERROR_STATUS_CODES.get(error.code, 400),
+            status=ERROR_STATUS_CODES.get(
+                error.code,
+                400,
+            ),
         )
     except DatabaseError:
-        logger.exception("Database error while reserving a ticket.")
+        logger.exception(("Database error while " "reserving a ticket."))
 
         return JsonResponse(
             {
                 "error": {
                     "code": "DATABASE_ERROR",
                     "message": (
-                        "The reservation could not be created because "
+                        "The reservation could "
+                        "not be created because "
                         "of a database error."
                     ),
                 }
@@ -141,40 +162,40 @@ def reserve_ticket(request):
             status=500,
         )
     except Exception:
-        logger.exception("Unexpected error while reserving a ticket.")
+        logger.exception(("Unexpected error while " "reserving a ticket."))
 
         return JsonResponse(
             {
                 "error": {
                     "code": "INTERNAL_SERVER_ERROR",
-                    "message": "An unexpected server error occurred.",
+                    "message": ("An unexpected server " "error occurred."),
                 }
             },
             status=500,
         )
 
+    # Uses the actual prefix from ticket_cache.py (currently v2),
+    # so there is no stale hard-coded v1 namespace.
+    invalidate_ticket_search_cache()
+
     return JsonResponse(
         {
-            "message": "Ticket reserved successfully.",
+            "message": ("Ticket reserved " "successfully."),
             "reservation": reservation,
         },
         status=201,
     )
 
 
-def list_user_reservations(request):
-    """
-    GET /api/reservations/user/
-
-    List reservations belonging to the authenticated user.
-    """
-
+def list_user_reservations(
+    request,
+):
     if request.method != "GET":
         return JsonResponse(
             {
                 "error": {
                     "code": "METHOD_NOT_ALLOWED",
-                    "message": "Only GET requests are allowed.",
+                    "message": ("Only GET requests " "are allowed."),
                 }
             },
             status=405,
@@ -205,35 +226,43 @@ def list_user_reservations(request):
                     "message": error.message,
                 }
             },
-            status=ERROR_STATUS_CODES.get(error.code, 400),
+            status=ERROR_STATUS_CODES.get(
+                error.code,
+                400,
+            ),
         )
     except DatabaseError:
-        logger.exception("Database error while listing user reservations.")
+        logger.exception(("Database error while " "listing user reservations."))
 
         return JsonResponse(
             {
                 "error": {
                     "code": "DATABASE_ERROR",
                     "message": (
-                        "Reservations could not be retrieved "
-                        "because of a database error."
+                        "Reservations could not "
+                        "be retrieved because of "
+                        "a database error."
                     ),
                 }
             },
             status=500,
         )
     except Exception:
-        logger.exception("Unexpected error while listing user reservations.")
+        logger.exception(("Unexpected error while " "listing user reservations."))
 
         return JsonResponse(
             {
                 "error": {
                     "code": "INTERNAL_SERVER_ERROR",
-                    "message": "An unexpected server error occurred.",
+                    "message": ("An unexpected server " "error occurred."),
                 }
             },
             status=500,
         )
+
+    # get_user_reservations may expire old Reserved rows and restore
+    # capacity, so cached search results must be invalidated afterward.
+    invalidate_ticket_search_cache()
 
     return JsonResponse(
         {
@@ -247,23 +276,16 @@ def list_user_reservations(request):
     )
 
 
-# Show cancellation penalty
-
-
-def cancellation_quote(request, reservation_id):
-    """
-    GET /api/reservations/<reservation_id>/cancellation-quote/
-
-    Calculate the cancellation penalty for a reservation owned by the
-    authenticated user.
-    """
-
+def cancellation_quote(
+    request,
+    reservation_id,
+):
     if request.method != "GET":
         return JsonResponse(
             {
                 "error": {
                     "code": "METHOD_NOT_ALLOWED",
-                    "message": "Only GET requests are allowed.",
+                    "message": ("Only GET requests " "are allowed."),
                 }
             },
             status=405,
@@ -303,29 +325,32 @@ def cancellation_quote(request, reservation_id):
             ),
         )
     except DatabaseError:
-        logger.exception("Database error while calculating a cancellation quote.")
+        logger.exception(
+            ("Database error while " "calculating a " "cancellation quote.")
+        )
 
         return JsonResponse(
             {
                 "error": {
                     "code": "DATABASE_ERROR",
                     "message": (
-                        "The cancellation quote could not "
-                        "be calculated because of a "
-                        "database error."
+                        "The cancellation quote "
+                        "could not be calculated "
+                        "because of a database "
+                        "error."
                     ),
                 }
             },
             status=500,
         )
     except Exception:
-        logger.exception("Unexpected cancellation quote error.")
+        logger.exception(("Unexpected cancellation " "quote error."))
 
         return JsonResponse(
             {
                 "error": {
                     "code": "INTERNAL_SERVER_ERROR",
-                    "message": "An unexpected server error occurred.",
+                    "message": ("An unexpected server " "error occurred."),
                 }
             },
             status=500,
@@ -333,28 +358,24 @@ def cancellation_quote(request, reservation_id):
 
     return JsonResponse(
         {
-            "message": "Cancellation penalty calculated successfully.",
+            "message": ("Cancellation penalty " "calculated successfully."),
             "cancellation_quote": quote,
         },
         status=200,
     )
 
 
-# Cancle a reservation
-
-
 @csrf_exempt
-def cancel_reservation(request, reservation_id):
-    """
-    POST /api/reservations/<reservation_id>/cancel/
-    """
-
+def cancel_reservation(
+    request,
+    reservation_id,
+):
     if request.method != "POST":
         return JsonResponse(
             {
                 "error": {
                     "code": "METHOD_NOT_ALLOWED",
-                    "message": "Only POST requests are allowed.",
+                    "message": ("Only POST requests " "are allowed."),
                 }
             },
             status=405,
@@ -380,7 +401,6 @@ def cancel_reservation(request, reservation_id):
             reservation_id=reservation_id,
             phone_number=phone_number,
         )
-
     except ReservationError as error:
         return JsonResponse(
             {
@@ -394,40 +414,41 @@ def cancel_reservation(request, reservation_id):
                 400,
             ),
         )
-
     except DatabaseError:
-        logger.exception("Database error while cancelling a reservation.")
+        logger.exception(("Database error while " "cancelling a reservation."))
 
         return JsonResponse(
             {
                 "error": {
                     "code": "DATABASE_ERROR",
                     "message": (
-                        "The reservation could not be cancelled "
-                        "because of a database error."
+                        "The reservation could "
+                        "not be cancelled because "
+                        "of a database error."
                     ),
                 }
             },
             status=500,
         )
-
     except Exception:
-        logger.exception("Unexpected error while cancelling a reservation.")
+        logger.exception(("Unexpected error while " "cancelling a reservation."))
 
         return JsonResponse(
             {
                 "error": {
                     "code": "INTERNAL_SERVER_ERROR",
-                    "message": ("An unexpected server error occurred."),
+                    "message": ("An unexpected server " "error occurred."),
                 }
             },
             status=500,
         )
 
+    invalidate_ticket_search_cache()
+
     return JsonResponse(
         {
             "message": (
-                "Reservation cancelled and refund added " "to wallet successfully."
+                "Reservation cancelled " "and refund added to wallet " "successfully."
             ),
             **result,
         },

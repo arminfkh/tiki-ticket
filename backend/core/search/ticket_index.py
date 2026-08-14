@@ -30,6 +30,15 @@ TICKET_INDEX_MAPPINGS = {
         "match_id": {
             "type": "integer",
         },
+        "seat_number": {
+            "type": "keyword",
+        },
+        "seat_row": {
+            "type": "keyword",
+        },
+        "seat_section": {
+            "type": "keyword",
+        },
         "ticket_class": {
             "type": "keyword",
             "normalizer": "lowercase_normalizer",

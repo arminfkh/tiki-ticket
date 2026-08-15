@@ -530,7 +530,16 @@ function HistoryReservationCard({
   onCloseQuote,
 }) {
   const isPaid =
-    reservation.status === "Paid";
+  reservation.status === "Paid";
+
+  const matchTime =
+    new Date(
+      reservation.match_datetime,
+    ).getTime();
+
+  const matchHasStarted =
+    Number.isFinite(matchTime) &&
+    matchTime <= Date.now();
 
   const quoteIsOpen =
     quoteState.reservationId ===
@@ -660,21 +669,31 @@ function HistoryReservationCard({
             type="button"
             className="button button-secondary"
             disabled={
-              quoteState.loading &&
-              quoteState.reservationId ===
-                reservation.reservation_id
+              matchHasStarted ||
+              (
+                quoteState.loading &&
+                quoteState.reservationId ===
+                  reservation.reservation_id
+              )
             }
             onClick={() =>
               onGetQuote(
                 reservation.reservation_id,
               )
             }
+            title={
+              matchHasStarted
+                ? "This match has already started."
+                : "Cancel this ticket"
+            }
           >
-            {quoteState.loading &&
-            quoteState.reservationId ===
-              reservation.reservation_id
-              ? "Calculating..."
-              : "Cancel ticket"}
+            {matchHasStarted
+              ? "Cancellation closed"
+              : quoteState.loading &&
+                  quoteState.reservationId ===
+                    reservation.reservation_id
+                ? "Calculating..."
+                : "Cancel ticket"}
           </button>
         </div>
       )}

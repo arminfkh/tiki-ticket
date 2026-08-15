@@ -142,6 +142,20 @@ export default function ProfilePage() {
 
           <div className="profile-summary-divider" />
 
+          <div className="profile-wallet-card">
+            <span>Wallet balance</span>
+
+            <strong>
+              {formatWalletBalance(
+                user?.wallet_balance,
+              )}
+            </strong>
+
+            <small>
+              Used for ticket payments and refunds.
+            </small>
+          </div>
+
           <ProfileInfo
             label="Phone number"
             value={user?.phone_number}
@@ -337,4 +351,14 @@ function formatDate(value) {
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
   }).format(date);
+}
+
+function formatWalletBalance(value) {
+  const balance = Number(value);
+
+  if (!Number.isFinite(balance)) {
+    return "—";
+  }
+
+  return balance.toFixed(2);
 }

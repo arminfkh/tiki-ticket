@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   getCancelledTickets,
@@ -30,49 +30,73 @@ export default function SupportDashboardPage() {
 
   const [actionId, setActionId] = useState(null);
 
-  const loadDashboard = useCallback(async (signal) => {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const [
-        reportsResponse,
-        reservationsResponse,
-        paymentsResponse,
-        cancelledResponse,
-      ] = await Promise.all([
-        getUserReports({ signal }),
-        getManageableReservations({ signal }),
-        getSuspiciousPayments({ signal }),
-        getCancelledTickets({ signal }),
-      ]);
-
-      setReports(reportsResponse.user_reports ?? []);
-      setReservations(reservationsResponse.reservations ?? []);
-      setPayments(paymentsResponse.suspicious_payments ?? []);
-      setCancelledTickets(
-        cancelledResponse.cancelled_tickets ?? [],
-      );
-    } catch (error) {
-      if (error.name !== "AbortError") {
-        setError(
-          error.message || "Could not load the support dashboard.",
+  useEffect(() => {
+    const controller =
+      new AbortController();
+  
+    async function loadInitialDashboard() {
+      try {
+        const [
+          reportsResponse,
+          reservationsResponse,
+          paymentsResponse,
+          cancelledResponse,
+        ] = await Promise.all([
+          getUserReports({
+            signal: controller.signal,
+          }),
+  
+          getManageableReservations({
+            signal: controller.signal,
+          }),
+  
+          getSuspiciousPayments({
+            signal: controller.signal,
+          }),
+  
+          getCancelledTickets({
+            signal: controller.signal,
+          }),
+        ]);
+  
+        if (controller.signal.aborted) {
+          return;
+        }
+  
+        setReports(
+          reportsResponse.user_reports ?? [],
         );
-      }
-    } finally {
-      if (!signal?.aborted) {
-        setIsLoading(false);
+  
+        setReservations(
+          reservationsResponse.reservations ?? [],
+        );
+  
+        setPayments(
+          paymentsResponse.suspicious_payments ?? [],
+        );
+  
+        setCancelledTickets(
+          cancelledResponse.cancelled_tickets ?? [],
+        );
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          setError(
+            error.message ||
+              "Could not load the support dashboard.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     }
+  
+    loadInitialDashboard();
+  
+    return () =>
+      controller.abort();
   }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    loadDashboard(controller.signal);
-
-    return () => controller.abort();
-  }, [loadDashboard]);
 
   async function handleReviewReport(reportId) {
     setError("");
@@ -127,9 +151,34 @@ export default function SupportDashboardPage() {
           : `Reservation #${reservation.reservation_id} was cancelled.`,
       );
 
-      const controller = new AbortController();
-
-      await loadDashboard(controller.signal);
+      const [
+        reportsResponse,
+        reservationsResponse,
+        paymentsResponse,
+        cancelledResponse,
+      ] = await Promise.all([
+        getUserReports(),
+        getManageableReservations(),
+        getSuspiciousPayments(),
+        getCancelledTickets(),
+      ]);
+      
+      setReports(
+        reportsResponse.user_reports ?? [],
+      );
+      
+      setReservations(
+        reservationsResponse.reservations ?? [],
+      );
+      
+      setPayments(
+        paymentsResponse.suspicious_payments ?? [],
+      );
+      
+      setCancelledTickets(
+        cancelledResponse.cancelled_tickets ?? [],
+      );
+      
     } catch (error) {
       setError(
         error.message || "Could not cancel the reservation.",

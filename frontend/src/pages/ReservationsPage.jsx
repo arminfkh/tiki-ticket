@@ -96,10 +96,6 @@ function ReservationCountdown({
         Number(initialSeconds) || 0,
       );
 
-    setRemainingSeconds(
-      startingSeconds,
-    );
-
     notifiedRef.current =
       false;
 
@@ -340,14 +336,15 @@ function ActiveReservationCard({
       </div>
 
       <div className="reservation-card-side">
-        <ReservationCountdown
-          initialSeconds={
-            reservation.remaining_seconds
-          }
-          onExpire={
-            onExpired
-          }
-        />
+      <ReservationCountdown
+        key={`${reservation.reservation_id}-${reservation.remaining_seconds}`}
+        initialSeconds={
+          reservation.remaining_seconds
+        }
+        onExpire={
+          onExpired
+        }
+      />
 
         <div className="reservation-side-info">
           <span>

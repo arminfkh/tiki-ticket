@@ -1,39 +1,31 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { updateProfile } from "../api/profile.js";
 import useAuth from "../auth/useAuth.js";
 
+function getProfileFormValues(user) {
+  return {
+    first_name: user?.first_name ?? "",
+    last_name: user?.last_name ?? "",
+    email: user?.email ?? "",
+    residence_city: user?.residence_city ?? "",
+  };
+}
+
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
 
-  const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    residence_city: "",
-  });
-
-  const [initialForm, setInitialForm] = useState(null);
+  const [form, setForm] = useState(
+    () => getProfileFormValues(user),
+  );
+  
+  const [initialForm, setInitialForm] = useState(
+    () => getProfileFormValues(user),
+  );
 
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-
-    const values = {
-      first_name: user.first_name ?? "",
-      last_name: user.last_name ?? "",
-      email: user.email ?? "",
-      residence_city: user.residence_city ?? "",
-    };
-
-    setForm(values);
-    setInitialForm(values);
-  }, [user]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -85,12 +77,8 @@ export default function ProfilePage() {
 
       updateUser(response.profile);
 
-      const updatedValues = {
-        first_name: response.profile.first_name ?? "",
-        last_name: response.profile.last_name ?? "",
-        email: response.profile.email ?? "",
-        residence_city: response.profile.residence_city ?? "",
-      };
+      const updatedValues =
+        getProfileFormValues(response.profile);
 
       setForm(updatedValues);
       setInitialForm(updatedValues);

@@ -5,6 +5,7 @@ import {
   useState,
 } from "react";
 import {
+  Navigate,
   useLocation,
   useNavigate,
   useParams,
@@ -18,6 +19,7 @@ import {
 } from "../api/tickets.js";
 import useAuth from "../auth/useAuth.js";
 import AutoCompleteInput from "../components/AutoCompleteInput.jsx";
+import TicketDetailsPage from "./TicketDetailsPage.jsx";
 
 const SPORT_CONFIG = {
   football: {
@@ -1433,8 +1435,29 @@ function TicketsPageContent({ sport }) {
 }
 
 export default function TicketsPage() {
-  const { sport: sportParam = "football" } = useParams();
-  const sport = sportParam.toLowerCase();
+  const {
+    sport: sportParam = "football",
+  } = useParams();
+
+  const sport =
+    sportParam.toLowerCase();
+    
+  if (!SPORT_CONFIG[sport]) {
+    if (/^\d+$/.test(sportParam)) {
+      return (
+        <TicketDetailsPage
+          ticketIdOverride={sportParam}
+        />
+      );
+    }
+
+    return (
+      <Navigate
+        to="/tickets/football"
+        replace
+      />
+    );
+  }
 
   return (
     <TicketsPageContent

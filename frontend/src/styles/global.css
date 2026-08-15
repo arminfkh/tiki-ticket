@@ -3454,7 +3454,7 @@ span:not(:last-child)::after {
   gap: 18px;
 }
 
-.reservation-history-top > div {
+.reservation-history-top > div:first-child {
   display: grid;
   gap: 5px;
 }
@@ -6334,4 +6334,55 @@ span:not(:last-child)::after {
 
 .profile-wallet-card small {
   line-height: 1.45;
+}
+
+.reservation-history-top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+
+  flex-shrink: 0;
+}
+
+.reservation-report-button {
+  width: 34px;
+  height: 34px;
+
+  flex: 0 0 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid rgb(239 68 68 / 0.35);
+  border-radius: 50%;
+
+  background: rgb(239 68 68 / 0.07);
+  color: #f87171;
+
+  cursor: pointer;
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.reservation-report-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.reservation-report-button:hover {
+  color: #fca5a5;
+  border-color: #ef4444;
+  background: rgb(239 68 68 / 0.14);
+
+  transform: translateY(-1px);
 }

@@ -4,7 +4,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useNavigate } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 
 import {
   cancelReservation,
@@ -209,11 +209,32 @@ function ReservationTicketInfo({
           </h3>
         </div>
 
-        <StatusBadge
-          status={
-            reservation.status
-          }
-        />
+        <div className="reservation-history-top-actions">
+          <NavLink
+            className="reservation-report-button"
+            to={`/report/${reservation.reservation_id}`}
+            title="Report a problem"
+            aria-label={`Report a problem with reservation ${reservation.reservation_id}`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                d="M5 21V4m0 0h11l-1.5 3L16 10H5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </NavLink>
+
+          <StatusBadge
+            status={reservation.status}
+          />
+        </div>
       </div>
 
       <div className="reservation-match-meta">
@@ -533,11 +554,32 @@ function HistoryReservationCard({
           </strong>
         </div>
 
-        <StatusBadge
-          status={
-            reservation.status
-          }
-        />
+        <div className="reservation-history-top-actions">
+          <NavLink
+            className="reservation-report-button"
+            to={`/report/${reservation.reservation_id}`}
+            title="Report a problem"
+            aria-label={`Report a problem with reservation ${reservation.reservation_id}`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                d="M5 21V4m0 0h11l-1.5 3L16 10H5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </NavLink>
+
+          <StatusBadge
+            status={reservation.status}
+          />
+        </div>
       </div>
 
       <div className="reservation-history-grid">

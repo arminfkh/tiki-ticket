@@ -6264,3 +6264,74 @@ span:not(:last-child)::after {
     width: 100%;
   }
 }
+
+.wallet-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 36px;
+  padding: 7px 11px;
+
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+
+  font-size: 0.82rem;
+}
+
+.wallet-pill:hover {
+  border-color: var(--primary);
+  color: var(--text);
+}
+
+.wallet-pill strong {
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+.profile-wallet-card {
+  display: grid;
+  gap: 5px;
+
+  padding: 15px 16px;
+
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--primary) 34%,
+      var(--border)
+    );
+
+  border-radius: 12px;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--primary) 7%,
+      var(--surface-secondary)
+    );
+}
+
+.profile-wallet-card span,
+.profile-wallet-card small {
+  color: var(--text-muted);
+}
+
+.profile-wallet-card span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.profile-wallet-card strong {
+  color: var(--primary);
+  font-size: 1.45rem;
+}
+
+.profile-wallet-card small {
+  line-height: 1.45;
+}

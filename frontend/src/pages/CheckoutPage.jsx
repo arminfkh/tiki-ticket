@@ -103,10 +103,6 @@ function CheckoutCountdown({
         Number(initialSeconds) || 0,
       );
 
-    setRemainingSeconds(
-      startingSeconds,
-    );
-
     notifiedRef.current =
       false;
 
@@ -370,6 +366,12 @@ export default function CheckoutPage() {
   const numericReservationId =
     Number(reservationId);
 
+  const hasValidReservationId =
+    Number.isInteger(
+      numericReservationId,
+    ) &&
+    numericReservationId > 0;
+
   const [
     reservation,
     setReservation,
@@ -416,20 +418,10 @@ export default function CheckoutPage() {
   ] = useState(false);
 
   useEffect(() => {
-    if (
-      !Number.isInteger(
-        numericReservationId,
-      ) ||
-      numericReservationId <= 0
-    ) {
-      setError(
-        "Invalid reservation ID.",
-      );
-      setLoading(false);
-
+    if (!hasValidReservationId) {
       return undefined;
     }
-
+  
     const controller =
       new AbortController();
 
@@ -528,7 +520,10 @@ export default function CheckoutPage() {
 
     return () =>
       controller.abort();
-  }, [numericReservationId]);
+  }, [
+    numericReservationId,
+    hasValidReservationId,
+  ]);
 
   const walletBalance =
     Number(
@@ -635,6 +630,38 @@ export default function CheckoutPage() {
     } finally {
       setPaying(false);
     }
+  }
+
+  if (!hasValidReservationId) {
+    return (
+      <section className="checkout-page">
+        <div className="checkout-state-card checkout-state-error">
+          <p className="eyebrow">
+            Checkout unavailable
+          </p>
+  
+          <h1>
+            We could not open this reservation
+          </h1>
+  
+          <p>
+            Invalid reservation ID.
+          </p>
+  
+          <button
+            type="button"
+            className="button"
+            onClick={() =>
+              navigate(
+                "/reservations",
+              )
+            }
+          >
+            Back to reservations
+          </button>
+        </div>
+      </section>
+    );
   }
 
   if (loading) {
@@ -1059,6 +1086,7 @@ export default function CheckoutPage() {
           {reservation.status ===
             "Reserved" && (
             <CheckoutCountdown
+              key={`${reservation.reservation_id}-${reservation.remaining_seconds}`}
               initialSeconds={
                 reservation
                   .remaining_seconds

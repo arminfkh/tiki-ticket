@@ -17,10 +17,14 @@ export default function MainLayout() {
   return (
     <div className="app-shell">
       <header className="site-header">
-        <NavLink className="brand" to="/">
-          Match Tickets
-        </NavLink>
-
+      <NavLink
+        className="brand tiki-logo"
+        to="/"
+        aria-label="TikiTicket home"
+      >
+        <span className="tiki-logo-first">Tiki</span>
+        <span className="tiki-logo-second">Ticket</span>
+      </NavLink>
         <nav className="main-nav" aria-label="Main navigation">
           <div className="nav-dropdown">
             <NavLink

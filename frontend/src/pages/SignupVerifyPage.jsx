@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate, NavLink } from "react-router";
 
 import { verifySignup } from "../api/auth.js";
 import useAuth from "../auth/useAuth.js";
@@ -93,6 +93,15 @@ export default function SignupVerifyPage() {
   return (
     <main className="page-container">
       <section className="auth-card">
+        <NavLink
+          className="tiki-logo auth-logo"
+          to="/"
+          aria-label="TikiTicket home"
+        >
+          <span className="tiki-logo-first">Tiki</span>
+          <span className="tiki-logo-second">Ticket</span>
+        </NavLink>
+
         <p className="eyebrow">Email verification</p>
 
         <h1>Verify your account</h1>

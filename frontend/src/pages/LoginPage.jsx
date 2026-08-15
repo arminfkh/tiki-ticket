@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate, NavLink } from "react-router";
+import { consumeSessionExpiredNotice } from "../auth/storage.js";
 
 import {
   loginWithOtp,
@@ -25,6 +26,9 @@ export default function LoginPage() {
 
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionExpired] = useState(
+    () => consumeSessionExpiredNotice(),
+  );
 
   useEffect(() => {
     if (secondsRemaining <= 0) {
@@ -133,6 +137,15 @@ export default function LoginPage() {
   return (
     <main className="page-container">
       <section className="auth-card">
+        <NavLink
+          className="tiki-logo auth-logo"
+          to="/"
+          aria-label="TikiTicket home"
+        >
+          <span className="tiki-logo-first">Tiki</span>
+          <span className="tiki-logo-second">Ticket</span>
+        </NavLink>
+
         <p className="eyebrow">Account</p>
 
         <h1>Log in</h1>
@@ -140,6 +153,15 @@ export default function LoginPage() {
         <p className="auth-description">
           Choose how you want to access your account.
         </p>
+        
+        {sessionExpired && (
+          <p
+            className="auth-session-notice"
+            role="status"
+          >
+            Your session has expired. Please log in again.
+          </p>
+        )}
 
         <div className="auth-tabs">
           <button

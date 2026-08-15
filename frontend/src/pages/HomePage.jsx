@@ -61,13 +61,6 @@ export default function HomePage() {
           />
 
           <HomeCard
-            title="Bookings"
-            description="Access tickets that you have purchased."
-            to="/bookings"
-            linkText="View bookings"
-          />
-
-          <HomeCard
             title="Profile"
             description="View and manage your account information."
             to="/profile"

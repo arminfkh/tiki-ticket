@@ -10,7 +10,6 @@ import TicketDetailsPage from "./pages/TicketDetailsPage.jsx";
 import ReservationsPage from "./pages/ReservationsPage.jsx";
 import CheckoutPage from "./pages/CheckoutPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
-import BookingsPage from "./pages/BookingsPage.jsx";
 import ReportPage from "./pages/ReportPage.jsx";
 import SupportDashboardPage from "./pages/SupportDashboardPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
@@ -45,7 +44,6 @@ export default function App() {
             element={<CheckoutPage />}
           />
           <Route path="profile" element={<ProfilePage />} />
-          <Route path="bookings" element={<BookingsPage />} />
           <Route path="report/:reservationId" element={<ReportPage />} />
         </Route>
 

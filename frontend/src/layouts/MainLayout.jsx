@@ -8,6 +8,16 @@ const SPORTS = [
   { label: "Volleyball", path: "/tickets/volleyball" },
 ];
 
+function formatWalletBalance(value) {
+  const balance = Number(value);
+
+  if (!Number.isFinite(balance)) {
+    return "—";
+  }
+
+  return balance.toFixed(2);
+}
+
 export default function MainLayout() {
   const { isAuthenticated, role, user, logout } = useAuth();
   const location = useLocation();
@@ -17,14 +27,15 @@ export default function MainLayout() {
   return (
     <div className="app-shell">
       <header className="site-header">
-      <NavLink
-        className="brand tiki-logo"
-        to="/"
-        aria-label="TikiTicket home"
-      >
-        <span className="tiki-logo-first">Tiki</span>
-        <span className="tiki-logo-second">Ticket</span>
-      </NavLink>
+        <NavLink
+          className="brand tiki-logo"
+          to="/"
+          aria-label="TikiTicket home"
+        >
+          <span className="tiki-logo-first">Tiki</span>
+          <span className="tiki-logo-second">Ticket</span>
+        </NavLink>
+
         <nav className="main-nav" aria-label="Main navigation">
           <div className="nav-dropdown">
             <NavLink
@@ -45,7 +56,10 @@ export default function MainLayout() {
 
             <div className="sport-menu">
               {SPORTS.map((sport) => (
-                <NavLink key={sport.path} to={sport.path}>
+                <NavLink
+                  key={sport.path}
+                  to={sport.path}
+                >
                   {sport.label}
                 </NavLink>
               ))}
@@ -56,10 +70,6 @@ export default function MainLayout() {
             <>
               <NavLink to="/reservations">
                 Reservations
-              </NavLink>
-
-              <NavLink to="/bookings">
-                Bookings
               </NavLink>
 
               <NavLink to="/profile">
@@ -78,6 +88,22 @@ export default function MainLayout() {
         <div className="auth-actions">
           {isAuthenticated ? (
             <>
+              {role === "Spectator" && (
+                <NavLink
+                  className="wallet-pill"
+                  to="/profile"
+                  title="Open profile"
+                >
+                  <span>Wallet</span>
+
+                  <strong>
+                    {formatWalletBalance(
+                      user?.wallet_balance
+                    )}
+                  </strong>
+                </NavLink>
+              )}
+
               <span className="user-label">
                 {user?.first_name || user?.email}
               </span>

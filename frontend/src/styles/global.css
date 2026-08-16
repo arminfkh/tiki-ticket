@@ -3454,7 +3454,7 @@ span:not(:last-child)::after {
   gap: 18px;
 }
 
-.reservation-history-top > div {
+.reservation-history-top > div:first-child {
   display: grid;
   gap: 5px;
 }
@@ -3526,6 +3526,28 @@ span:not(:last-child)::after {
   justify-content: flex-end;
 
   margin-top: 13px;
+}
+
+.reservation-history-actions
+.button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.45;
+
+  border-color: var(--border);
+  background: transparent;
+  color: var(--text-muted);
+
+  transform: none;
+}
+
+.reservation-history-actions
+.button:disabled:hover {
+  border-color: var(--border);
+  background: transparent;
+  color: var(--text-muted);
+
+  transform: none;
 }
 
 
@@ -5494,7 +5516,7 @@ span:not(:last-child)::after {
 .home-grid {
   display: grid;
 
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
 
   gap: 16px;
 }
@@ -6263,4 +6285,126 @@ span:not(:last-child)::after {
   .not-found-actions .button {
     width: 100%;
   }
+}
+
+.wallet-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 36px;
+  padding: 7px 11px;
+
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+
+  font-size: 0.82rem;
+}
+
+.wallet-pill:hover {
+  border-color: var(--primary);
+  color: var(--text);
+}
+
+.wallet-pill strong {
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+.profile-wallet-card {
+  display: grid;
+  gap: 5px;
+
+  padding: 15px 16px;
+
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--primary) 34%,
+      var(--border)
+    );
+
+  border-radius: 12px;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--primary) 7%,
+      var(--surface-secondary)
+    );
+}
+
+.profile-wallet-card span,
+.profile-wallet-card small {
+  color: var(--text-muted);
+}
+
+.profile-wallet-card span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.profile-wallet-card strong {
+  color: var(--primary);
+  font-size: 1.45rem;
+}
+
+.profile-wallet-card small {
+  line-height: 1.45;
+}
+
+.reservation-history-top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+
+  flex-shrink: 0;
+}
+
+.reservation-report-button {
+  width: 34px;
+  height: 34px;
+
+  flex: 0 0 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid rgb(239 68 68 / 0.35);
+  border-radius: 50%;
+
+  background: rgb(239 68 68 / 0.07);
+  color: #f87171;
+
+  cursor: pointer;
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.reservation-report-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.reservation-report-button:hover {
+  color: #fca5a5;
+  border-color: #ef4444;
+  background: rgb(239 68 68 / 0.14);
+
+  transform: translateY(-1px);
 }

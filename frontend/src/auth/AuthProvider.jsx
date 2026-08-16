@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useState,
 } from "react";
@@ -9,6 +10,8 @@ import {
 } from "react-router";
 
 import AuthContext from "./AuthContext.js";
+
+import { getProfile } from "../api/profile.js";
 
 import {
   AUTH_SESSION_EXPIRED_EVENT,
@@ -71,6 +74,52 @@ export function AuthProvider({ children }) {
     location.hash,
     navigate,
   ]);
+
+  useEffect(() => {
+  if (
+    !accessToken ||
+    user?.role !== "Spectator"
+  ) {
+    return undefined;
+  }
+
+  const controller =
+    new AbortController();
+
+  async function loadCurrentProfile() {
+    try {
+      const response =
+        await getProfile({
+          signal: controller.signal,
+        });
+
+      if (
+        !controller.signal.aborted &&
+        response?.profile
+      ) {
+        storeUser(response.profile);
+        setUser(response.profile);
+      }
+    } catch (error) {
+      if (
+        error?.name === "AbortError"
+      ) {
+        return;
+      }
+
+      // Keep the current authenticated user
+      // if refreshing the profile temporarily fails.
+    }
+  }
+
+  loadCurrentProfile();
+
+  return () =>
+    controller.abort();
+}, [
+  accessToken,
+  user?.role,
+]);
 
   function completeAuthentication(authResponse) {
     const token = authResponse.access_token;

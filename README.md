@@ -505,6 +505,6 @@ This keeps transactional correctness in the relational database while still demo
 
 ## Course Project Context
 
-TikiTicket was developed as a Database Systems final project covering the full path from relational modeling and SQL design to backend APIs, caching, search infrastructure, a web client, and containerized backend services.
+TikiTicket was developed as a project covering the full path from relational modeling and SQL design to backend APIs, caching, search infrastructure, a web client, and containerized backend services.
 
 ---
